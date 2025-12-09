@@ -13,7 +13,7 @@ const Sidebar = ({ drawerWidth }) => {
   const menuItems = [
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/' },
     { text: 'Customers', icon: <GroupIcon />, path: '/customers' },
-    { text: 'Users', text: 'Users', icon: <PeopleIcon />, path: '/users' },
+    { text: 'Users', icon: <PeopleIcon />, path: '/users' },
     { text: 'Reports', icon: <BarChartIcon />, path: '/reports' },
   ];
 

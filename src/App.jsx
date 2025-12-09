@@ -1,5 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+
+// Auth Context ko import karein
+import { useAuth } from './context/authContext'; 
 
 // Layout & Components
 import Layout from './components/Layout';
@@ -12,11 +15,18 @@ import Users from './pages/Users';
 import Reports from './pages/Reports';
 
 function App() {
-  // Authentication State ko manage karna
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  // useAuth Hook se values lein. Aapke AuthProvider mein loading state hai.
+  const { token, user, loading, logout } = useAuth(); 
+  
+  // isAuthenticated state ke bajaye, hum token ki maujoodgi check karenge
+  const isAuthenticated = !!token;
 
-  const handleLogin = () => setIsAuthenticated(true);
-  const handleLogout = () => setIsAuthenticated(false);
+  // 1. Initial Loading Screen
+  // Agar AuthProvider loading mein hai, toh App bhi loading screen dikhata hai.
+  // Note: Aapka AuthProvider khud loading screen dikha raha hai. Yahan bas null return karna safe hai.
+  if (loading) {
+    return null; 
+  }
 
   return (
     <Router>
@@ -24,13 +34,15 @@ function App() {
         {/* 1. Login Route (Public) */}
         <Route 
             path="/login" 
-            element={!isAuthenticated ? <Login onLogin={handleLogin} /> : <Navigate to="/" />} 
+            // Agar authenticated hai, toh Dashboard par redirect
+            element={!isAuthenticated ? <Login /> : <Navigate to="/" replace />} 
         />
 
         {/* 2. Protected Routes (Portal) */}
         {isAuthenticated ? (
           // Jab user logged in ho, toh Layout render karo aur uske andar nested routes
-          <Route path="/" element={<Layout onLogout={handleLogout} />}>
+          // Layout mein ab koi 'onLogout' prop ki zaroorat nahi.
+          <Route path="/" element={<Layout />}> 
             {/* Index Route (Default: /) */}
             <Route index element={<Dashboard />} /> 
             
@@ -41,7 +53,7 @@ function App() {
           </Route>
         ) : (
           // Agar user logged in nahi hai aur kisi protected route par jane ki koshish kare, toh Login par redirect kar do
-          <Route path="*" element={<Navigate to="/login" />} />
+          <Route path="*" element={<Navigate to="/login" replace />} />
         )}
       </Routes>
     </Router>

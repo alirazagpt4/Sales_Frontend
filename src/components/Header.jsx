@@ -1,7 +1,14 @@
 import React from 'react';
 import { AppBar, Toolbar, Typography, Button } from '@mui/material';
+import { useAuth } from '../context/authContext';
 
 const Header = ({ drawerWidth, onLogout }) => {
+  const { logout } = useAuth();
+
+  console.log("logout function in Header:", logout);
+
+  
+
   return (
     <AppBar
       position="fixed"
@@ -12,7 +19,7 @@ const Header = ({ drawerWidth, onLogout }) => {
         <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
           Sales Admin Portal
         </Typography>
-        <Button color="inherit" onClick={onLogout}>Logout</Button>
+        <Button color="inherit" onClick={logout}>Logout</Button>
       </Toolbar>
     </AppBar>
   );
