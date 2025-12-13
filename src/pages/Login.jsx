@@ -1,17 +1,20 @@
 import React, { useState } from 'react';
-import { Box, TextField, Button, Typography, Paper, CircularProgress, Alert } from '@mui/material';
+import { Box, TextField, Button, Typography, Paper, CircularProgress, Alert , } from '@mui/material';
 import API from '../api/axiosClient'; // 👈 Axios client import kiya
 // console.log("Login page loaded" , API);
 import { useAuth } from '../context/authContext.jsx'; // 👈 Context hook import kiya
 import { useNavigate } from 'react-router-dom';
 
+
+
 const Login = () => {
   // --- Context Hooks ---
   const { login } = useAuth(); // Auth Context se login function liya
   const navigate = useNavigate();
+  const farmSolution = '/farmsolution.png';
 
   // --- State Management ---
-  const [email, setEmail] = useState(''); // Username ki jagah email use karenge for API login
+  const [name, setName] = useState(''); // Username ki jagah email use karenge for API login
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -25,15 +28,15 @@ const Login = () => {
     try {
       // 1. 🌐 Login API Call
       const response = await API.post('/users/admin/login', { 
-        email, 
+        name, 
         password 
       });
       
       // Assuming backend se { token: "...", userDetails: { name: "..." } } mil raha hai
-      const { token: receivedToken } = response.data; 
+      const { token: receivedToken , username:username } = response.data; 
 
       // 2. ✅ Auth Context Update (Token aur User details save honge)
-      login(receivedToken);
+      login(receivedToken , username);
       
       // 3. Redirect to Dashboard
       navigate('/'); 
@@ -59,22 +62,39 @@ const Login = () => {
       }}
     >
       <Paper elevation={3} sx={{ padding: 4, width: 350 }}>
-        <Typography variant="h5" component="h1" gutterBottom align="center">
-          Admin Login
+        <Box display="flex" flexDirection="column" alignItems="center" mb={2}>
+        
+        {/* 💡 FIX: sx prop ko style prop se replace kiya aur size/fit set kiya */}
+        <img 
+            // Agar aapki image ka naam farmSolution hai aur woh import ho chuki hai
+            src={farmSolution} 
+            alt="farmlogo" 
+            style={{
+                height: '110px',  // Height fixed
+                width: '110px',   // Width fixed
+                objectFit: 'contain', // Yeh sabse zaruri hai taaki image scale na ho
+                marginBottom: '16px' // Thoda space diya
+            }} 
+        />
+        
+        {/* Typography ko Box ke andar rakha taaki center mein aaye */}
+        <Typography variant="h5" component="h1" align="center" mt={1}>
+            Admin Login
         </Typography>
+    </Box>
 
         {/* Error Alert */}
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
         <form onSubmit={handleSubmit}>
           <TextField
-            label="Email"
+            label="Name"
             variant="outlined"
             fullWidth
             margin="normal"
             required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
           />
           <TextField
             label="Password"

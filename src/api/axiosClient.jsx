@@ -2,6 +2,7 @@ import axios from "axios";
 console.log("Axios client initialized");
 
 const BASE_URL = 'http://38.242.201.229/api'; 
+// const BASE_URL = 'http://localhost:3000/api'; 
 
 const API = axios.create({
     baseURL: BASE_URL,

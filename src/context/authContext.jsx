@@ -16,7 +16,11 @@ export const useAuth = () => {
 
     //  State to hold authentication status
     const [token, setToken] = useState(null); 
+    const [user, setUser] = useState(
+         localStorage.getItem('username') || null 
+    );
      
+    console.log("user in auth context ...." , user)
     const [loading, setLoading] = useState(true);
 
     
@@ -26,10 +30,14 @@ export const useAuth = () => {
         
        // Sirf LocalStorage se token check karein
         const storedToken = localStorage.getItem('token');
+        const storedUsername = localStorage.getItem('username')
         
         
         if (storedToken) {
             setToken(storedToken);
+            if (storedUsername) {
+                setUser(storedUsername); 
+            }
            
         }
         
@@ -38,11 +46,14 @@ export const useAuth = () => {
 ``
 
     // Login function
-    const login = (receivedToken) => { 
+    const login = (receivedToken , username) => { 
     localStorage.setItem('token', receivedToken); // Seedha local storage mein set kiya
-    
+    localStorage.setItem('username' , username);
+
+    console.log("user ... login auth , ..." , username);
 
     setToken(receivedToken); // Sahi value state mein set ki
+    setUser(username);
    
 }
 
@@ -50,14 +61,17 @@ export const useAuth = () => {
     // --- 3. Logout Function ---
     const logout = () => {
         localStorage.removeItem('token');
+        localStorage.removeItem('username')
        // User details bhi remove karein
         setToken(null);
+        setUser(null)
       
         
     };
 
     // Context value to be provided
     const value = {
+        user,
         token,
         login,
         logout,
