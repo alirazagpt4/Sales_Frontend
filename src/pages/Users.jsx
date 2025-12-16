@@ -60,7 +60,8 @@ const AVAILABLE_ROLES = ['admin', 'user'];
 
 
 const Users = () => {
-    const { logout } = useAuth();
+    const { logout , user } = useAuth();
+    console.log("user .... in customers" , user);
 
     // --- State Management ---
     const [originalUsers, setOriginalUsers] = useState([]);

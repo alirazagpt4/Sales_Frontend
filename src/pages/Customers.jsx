@@ -1,109 +1,98 @@
-import React, { useState, useEffect , useMemo} from 'react';
+import React, { useState, useEffect , useCallback} from 'react';
 import { 
-  Typography, 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableContainer, 
-  TableHead, 
-  TableRow, 
-  Paper, 
-  Box,
-  CircularProgress, // Loading ke liye
-  Button, // Add button ke liye
-  Alert, // Error message ke liye
-  Chip, // Status ke liye,
-  TextField,
-  // Modal Components
+    Typography, 
+    Table, 
+    TableBody, 
+    TableCell, 
+    TableContainer, 
+    TableHead, 
+    TableRow, 
+    Paper, 
+    Box,
+    CircularProgress, 
+    Button, 
+    Alert, 
+    Chip, 
+    TextField,
     Dialog, DialogTitle, DialogContent, DialogActions,
+    Pagination, 
+    Select, MenuItem, FormControl , InputLabel //
 } from '@mui/material';
 
-
-
 import AddIcon from '@mui/icons-material/Add';
-import API from '../api/axiosClient'; 
-import { useAuth } from '../context/authContext'; // Logout handling ke liye
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import API from '../api/axiosClient'; 
+import { useAuth } from '../context/authContext'; 
 
-
-// --- Zaroori Headers (Aapke Data Structure ke mutabik) ---
+// --- Zaroori Headers ---
 const HEADERS = [
-    { label: 'ID', align: 'left' },
-    { label: 'Customer Name', align: 'left' },
-    { label: 'Contact', align: 'left' },
+    { label: 'ID', align: 'left', width: 50 },
+    { label: 'Customer Name', align: 'left', width: 100 },
+    { label: 'Contact', align: 'left', width: 100 },
     { label: 'Area', align: 'left' },
     { label: 'Tehsil', align: 'left' },
     { label: 'Potential Bags', align: 'right' },
     { label: 'Type', align: 'left' },
-    { label: 'Actions', align: 'center' }, // CRUD Actions
+    { label: 'City', align: 'left' },
+    { label: 'Actions', align: 'center', width: 120 },
 ];
 
-
-
-
-// --- 2. Helper Function for Status Badge ---
+// --- Helper Function for Status Badge (No change) ---
 const getStatusChip = (status) => {
-  let color;
-  switch (status) {
-    case 'Active':
-      color = 'success';
-      break;
-    case 'VIP':
-      color = 'primary';
-      break;
-    case 'Pending':
-      color = 'warning';
-      break;
-    case 'Inactive':
-      color = 'error';
-      break;
-    default:
-      color = 'default';
-  }
-  return <Chip label={status} color={color} size="small" />;
+    // ... (Your existing status chip logic)
+    let color;
+    switch (status) {
+        case 'Active': color = 'success'; break;
+        case 'VIP': color = 'primary'; break;
+        case 'Pending': color = 'warning'; break;
+        case 'Inactive': color = 'error'; break;
+        default: color = 'default';
+    }
+    return <Chip label={status} color={color} size="small" />;
 };
 
-// --- 3. Main Component ---
+
+// --- Main Component ---
 const Customers = () => {
-  const { logout } = useAuth();
+    const { logout , user } = useAuth();
+
     
-    // States: Ab ek naya state `originalCustomers` rakhenge
-    const [originalCustomers, setOriginalCustomers] = useState([]); // API se fetched saara data
+    // 🚀 PAGINATION STATES
+    const [customers, setCustomers] = useState([]); // Sirf current page ka data
+    const [page, setPage] = useState(1);
+    const [limit, setLimit] = useState(5); // Records per page
+    const [totalPages, setTotalPages] = useState(1); // Total pages count
+    
+    // --- Other States ---
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [searchTerm, setSearchTerm] = useState(''); // 👈 Naya Search state
+    const [searchTerm, setSearchTerm] = useState('');
+
+    // --- MODAL & FORM STATES ---
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [editingCustomer, setEditingCustomer] = useState(null); 
+    const initialFormData = { customer_name: '', contact: '', area: '', tehsil: '',cityId: '', bags_potential: 0, type: 'Dealer' };
+    const [formData, setFormData] = useState(initialFormData);
+    const [cities, setCities] = useState([]);
 
 
-    // 🚨 FIX 1: New State to Force Refresh
-    const [refreshTrigger, setRefreshTrigger] = useState(0);
-
-
-    // --- MODAL & FORM STATES (Ab sirf Edit ke liye) ---
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingCustomer, setEditingCustomer] = useState(null); // Woh customer jo edit ho raha hai
-    const [formData, setFormData] = useState({ 
-        customer_name: '', 
-        contact: '', 
-        area: '', 
-        tehsil: '', 
-        bags_potential: 0, 
-        type: 'Dealer' 
-    });
-
-
-
-
-    // / Polling ke liye zaroori function:
+    // 🚀 Data Fetching aur Pagination Logic
     const fetchCustomers = async () => {
         setLoading(true); 
+        setError(null);
+
         try {
-            const response = await API.get('/customers'); 
-            // setOriginalCustomers ko tabhi call karein jab naya data pichle data se alag ho
-            // Taa'ke unwanted re-renders se bacha ja sake.
-            setOriginalCustomers(response.data || []); 
+            
+            const url = `/customers?&page=${page}&limit=${limit}&search=${searchTerm}`;
+            const response = await API.get(url); 
+            console.log(".....response of customers" , response.data.data)
+
+            setCustomers(response.data.data || []);
+            setTotalPages(response.data.pagination.totalPages || 1);
+            
         } catch (err) {
-            // ... (Error handling same)
             if (err.response && err.response.status === 401) {
                 setError("Session expired. Logging out...");
                 setTimeout(logout, 2000); 
@@ -116,50 +105,37 @@ const Customers = () => {
     };
 
 
-    // --- 1. Data Fetching AUR Polling Logic ---
-    useEffect(() => {
-        
-        // Pehle baar data load karein jab component mount ho
-        fetchCustomers();
-        
-        // Polling interval set karein: Har 10 seconds (10000 milliseconds) mein
-        const intervalId = setInterval(() => {
-            console.log("Polling for new customer data...");
-            fetchCustomers();
-        }, 30000); // 30 seconds
-
-        // Cleanup Function: Component hatne par interval band karna zaroori hai!
-        // Yeh professional practice hai memory leak rokne ke liye.
-        return () => {
-            console.log("Cleaning up interval...");
-            clearInterval(intervalId);
-        };
-        
-    }, [logout , refreshTrigger]); // logout par hi dependency rakhte hain, refreshTrigger ki zarurat nahi ab.
-
-
-    // --- 2. Filtering Logic (useMemo se performance behtar hogi) ---
-    const filteredCustomers = useMemo(() => {
-        if (!searchTerm) {
-            return originalCustomers;
+    const fetchCities = useCallback(async () => {
+        try {
+            // ⚠️ Ensure your city API endpoint is correct
+            const response = await API.get('/cities'); 
+            // ⚠️ Assuming response.data is an array of city objects: [{ id: 1, name: 'FSD' }, ...]
+            setCities(response.data || []);
+        } catch (err) {
+            console.error("Failed to fetch cities:", err);
+            // Agar city list load na ho toh error set kar sakte hain
         }
-        const lowerCaseSearch = searchTerm.toLowerCase();
+    }, []);
+
+    // --- useEffect: Data Fetching Dependency ---
+    // Jab bhi page, limit, ya searchTerm badle, naya data fetch karein
+    useEffect(() => {
+        fetchCustomers();
+        fetchCities();
         
-        return originalCustomers.filter(customer => {
-            // Hum customer_name, contact, area, aur type mein search karenge
-            return (
-                customer.customer_name.toLowerCase().includes(lowerCaseSearch) ||
-                customer.contact.toLowerCase().includes(lowerCaseSearch) ||
-                customer.area.toLowerCase().includes(lowerCaseSearch) ||
-                customer.type.toLowerCase().includes(lowerCaseSearch)
-            );
-        });
-    }, [originalCustomers, searchTerm]); // Jab originalCustomers ya searchTerm badlega, tabhi filter hoga
+        // Polling (Optional but present in original code)
+        const intervalId = setInterval(fetchCustomers, 30000); 
+        return () => clearInterval(intervalId);
+
+    }, [page, limit, searchTerm, logout , fetchCities]); 
 
 
 
-  //  // ---. MODAL & FORM HANDLERS ---
+
+
     
+    
+    // --- FORM HANDLERS (Same) ---
     const handleFormChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ 
@@ -168,82 +144,105 @@ const Customers = () => {
         }));
     };
 
-
-
-   // Modal open karne ke liye (Edit mode)
-    const handleOpenEditModal = (customer) => {
-        setEditingCustomer(customer); // Customer data set
-        setFormData({ // Form mein existing data load
-            customer_name: customer.customer_name, 
-            contact: customer.contact, 
-            area: customer.area, 
-            tehsil: customer.tehsil, 
-            bags_potential: customer.bags_potential, 
-            type: customer.type 
-        });
-        setIsModalOpen(true);
-    };
-
-
-
-    // Modal band karne ke liye
-    const handleCloseModal = () => {
-        setIsModalOpen(false);
-        setEditingCustomer(null); // Editing state clear
-        setError(null); // Error clear
-    };
-
-
-    // function to handle  update (Patch method) submission
+    // --- MODAL HANDLERS (Same) ---
+    const handleOpenAddModal = () => {
+        const defaultCityId = user && user.city_id ? user.city_id : '';
+        setFormData({
+        ...initialFormData,
+        cityId: defaultCityId // 🚀 Default value set
+    });;
+        setIsAddModalOpen(true);
+        setError(null);
+    }
     
+    const handleOpenEditModal = (customer) => {
+        setEditingCustomer(customer);
+        setFormData({ 
+            customer_name: customer.customer_name, contact: customer.contact, 
+            area: customer.area, tehsil: customer.tehsil, 
+            city_id: customer.city_id || '',
+            bags_potential: customer.bags_potential, type: customer.type ,
+
+        });
+        setIsEditModalOpen(true);
+        setError(null);
+    };
+
+    const handleCloseModal = () => {
+        setIsEditModalOpen(false);
+        setIsAddModalOpen(false);
+        setEditingCustomer(null);
+        setError(null);
+    };
+
+    // 🚀 FIX: Handle Form Submission (Add New Customer)
+    const handleFormSubmit = async (e) => {
+        e.preventDefault();
+        setError(null);
+        
+        try {
+            // API call to create customer
+            await API.post('/customers/create-customer', formData);
+            
+            // Jab naya customer add hota hai, use page 1 par dikhana behtar hai.
+            // setPage(1) useEffect ko trigger karega aur naya data fetch ho jayega.
+            if (page !== 1) setPage(1); 
+            else fetchCustomers(); // Agar already page 1 par hain, toh manual fetch
+
+            handleCloseModal();
+        } catch (err) {
+            console.error("Failed to add customer:", err);
+            const msg = err.response?.data?.error || "Error adding customer. Check required fields.";
+            setError(msg);
+        }
+    }
+    
+    // 🚀 FIX: Handle Form Update (Edit Customer) - Refresh data instead of manual update
     const handleFormUpdate = async (e) => {
       e.preventDefault();
       setError(null);
-
-        console.log("editingCustomer :::::" , editingCustomer.id)
-      // Ensure we are in edit 
       if (!editingCustomer || !editingCustomer.id) return;
 
-       try {
-             const response = await API.patch(`/customers/${editingCustomer.id}`,formData);
-              const updatedCustomer = response.data;
-              console.log("......... updatedCustomer :  " , updatedCustomer)
+      try {
+            await API.patch(`/customers/${editingCustomer.id}`, formData);
+            
+            // 💡 FIX: Manual state update ki bajaye, data ko dobara fetch karein
+            await fetchCustomers();
+            
+            handleCloseModal();
+            console.log("Customer updated successfully.");
 
-             // --- FIX Applied Here ---
-         setOriginalCustomers(prevCustomers => {
-             // Hum previous array ko map kar rahe hain.
-             return prevCustomers.map(customer => {
-                  // Agar ID match ho jaye, toh naye (updated) customer object se replace kar do.
-                 if (customer.id === editingCustomer.id) {
-                     return updatedCustomer;
-                }
-                // Warna, original customer object return karo.
-                return customer;
-            });
-        });
-
-
-
-            handleCloseModal(); // Modal band karein
-            console.log("Customer updated successfully:", updatedCustomer);
-
-            setRefreshTrigger(prev => prev + 1);
-
-
-       } catch (error) {
-
-        console.error("Failed to update customer:", err);
-            setError("Error updating customer. Please check the data.");
-        
-       }
-
+      } catch (err) {
+          console.error("Failed to update customer:", err);
+          const msg = err.response?.data?.error || "Error updating customer. Please check the data.";
+          setError(msg);
+      }
     }
 
+    // 🚀 FIX: Handle Delete Customer - Ensure data refresh
+    const handleDeleteCustomer = async (customerId) => {
+        if (!window.confirm(`Are you sure you want to delete customer ID ${customerId}?`)) {
+            return;
+        }
+        
+        setError(null);
+        try {
+            await API.delete(`/customers/${customerId}`); 
 
+            // 💡 FIX: Data delete hone ke baad, current page ka data dobara load karein
+            // Taki agar page par ek hi record tha, toh pichla page load ho jaye
+            fetchCustomers(); 
+            
+            console.log(`Customer ID ${customerId} deleted successfully.`);
+            
+        } catch (err) {
+            console.error("Failed to delete customer:", err);
+            setError(`Error deleting customer ID ${customerId}.`);
+        }
+    };
 
-
-    // --- 3. Conditional Rendering (Same as before) ---
-    if (loading) {
+    // --- Conditional Rendering ---
+    if (loading && customers.length === 0) {
         return (
             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 400 }}>
                 <CircularProgress />
@@ -251,53 +250,8 @@ const Customers = () => {
             </Box>
         );
     }
-    if (error) {
-        return <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>;
-    }
 
-
-  // 4 - handle Add Customer Later
-
-
-  // 5 - handle delete a single customer by id 
-
-  // Customers component ke andar add karein
-const handleDeleteCustomer = async (customerId) => {
-    if (!window.confirm(`Are you sure you want to delete customer ID ${customerId}?`)) {
-        return; // User cancelled
-    }
-    
-    setError(null);
-
-    try {
-        await API.delete(`/customers/${customerId}`); 
-
-        // State update: Deleted customer ko list se remove karein
-        setOriginalCustomers(prev => prev.filter(c => c.id !== customerId));
-        
-        console.log(`Customer ID ${customerId} deleted successfully.`);
-        // Success Notification
-        
-    } catch (err) {
-        console.error("Failed to delete customer:", err);
-        setError(`Error deleting customer ID ${customerId}.`);
-    }
-};
-
-// Error screen
-    if (error && !isModalOpen) { // Agar error ho aur modal open na ho tabhi dikhayein
-        return (
-            <Alert severity="error" sx={{ mt: 2 }}>
-                {error}
-            </Alert>
-        );
-    }
-
-
-
-
-
-  // --- . Main Component Render ---
+    // --- Main Component Render ---
     return (
         <Box>
             <Typography variant="h4" gutterBottom>
@@ -306,39 +260,43 @@ const handleDeleteCustomer = async (customerId) => {
 
             {/* --- Search Bar and Add Button --- */}
             <Box display="flex" justifyContent="space-between" mb={2} alignItems="center">
-                {/* 👈 Search Bar */}
                 <TextField
                     label="Search Customers (Name, Contact, Area)"
                     variant="outlined"
                     size="small"
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={(e) => {
+                        setSearchTerm(e.target.value);
+                        setPage(1); // Search change hone par hamesha page 1 par
+                    }}
                     sx={{ width: '40%' }}
                 />
 
-                {/* + Button: Add Customer */}
                 <Button 
                     variant="contained" 
                     color="success" 
                     startIcon={<AddIcon />}
-                    onClick={() => console.log('Add Customer clicked')} // 👈 Yahan POST API logic aayegi
+                    onClick={handleOpenAddModal} 
                 >
                     Add New Customer
                 </Button>
             </Box>
             
-            {/* --- Customer Table (Ab filteredCustomers ko use karega) --- */}
+            {/* Error Message */}
+            {error && <Alert severity="error" sx={{ mt: 2, mb: 2 }}>{error}</Alert>}
+
+            {/* --- Customer Table --- */}
             <TableContainer component={Paper} elevation={3}>
                 <Table sx={{ minWidth: 800 }} aria-label="customer table">
                     
-                    {/* ... Table Header (Same) ... */}
+                    {/* ... Table Header ... */}
                     <TableHead sx={{ backgroundColor: '#f5f5f5' }}>
                         <TableRow>
                             {HEADERS.map(header => (
                                 <TableCell 
                                     key={header.label} 
                                     align={header.align} 
-                                    sx={{ fontWeight: 'bold' }}
+                                    sx={{ fontWeight: 'bold', width: header.width || 'auto', whiteSpace: 'nowrap' }}
                                 >
                                     {header.label}
                                 </TableCell>
@@ -348,34 +306,35 @@ const handleDeleteCustomer = async (customerId) => {
                     
                     {/* Table Body */}
                     <TableBody>
-                        {filteredCustomers.map((customer) => ( // 👈 Ab filteredCustomers use ho raha hai
+                        {customers.map((customer) => (
                             <TableRow
-                                key={customer.id}
+                                key={customer.id} // ✅ Correct key for data rows
                                 sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                             >
                                 <TableCell>{customer.id}</TableCell>
-                                <TableCell>{customer.customer_name}</TableCell>
+                                <TableCell sx={{ minWidth: 150, whiteSpace: 'nowrap' }}>{customer.customer_name}</TableCell>
                                 <TableCell>{customer.contact}</TableCell>
                                 <TableCell>{customer.area}</TableCell>
                                 <TableCell>{customer.tehsil}</TableCell>
                                 <TableCell align="right">{customer.bags_potential || 0}</TableCell>
                                 <TableCell>{customer.type}</TableCell>
+                                <TableCell>{customer.cityName}</TableCell>
                                 <TableCell align="center">
                                     <Button size="small" color="primary" startIcon={<EditIcon />} sx={{ minWidth: 0, p: '4px', mr: 1 }}
-                                        onClick={() => handleOpenEditModal(customer)} // 👈 Yahan PUT API logic aayegi
+                                        onClick={() => handleOpenEditModal(customer)}
                                     />
                                     <Button size="small" color="error" startIcon={<DeleteIcon />} sx={{ minWidth: 0, p: '4px' }}
-                                        onClick={() => handleDeleteCustomer(customer.id)} // 👈 Yahan DELETE API logic aayegi
+                                        onClick={() => handleDeleteCustomer(customer.id)}
                                     />
                                 </TableCell>
                             </TableRow>
                         ))}
                         {/* No Results found */}
-                        {filteredCustomers.length === 0 && originalCustomers.length > 0 && (
-                            <TableRow>
+                        {customers.length === 0 && !loading && (
+                            <TableRow key="no-results-row"> {/* ✅ FIX: Added unique key */}
                                 <TableCell colSpan={8} align="center">
                                     <Typography variant="subtitle1" color="textSecondary">
-                                        No customers found matching "{searchTerm}"
+                                        {searchTerm ? `No customers found matching "${searchTerm}"` : "No customers created yet."}
                                     </Typography>
                                 </TableCell>
                             </TableRow>
@@ -384,77 +343,116 @@ const handleDeleteCustomer = async (customerId) => {
                 </Table>
             </TableContainer>
 
+            {/* 🚀 PAGINATION & LIMIT CONTROL (No change) */}
+            <Box display="flex" justifyContent="space-between" alignItems="center" marginTop={3} marginBottom={2}>
+                <Typography variant="body2" color="textSecondary">
+                    Showing {customers.length} items of approx. {(totalPages * limit)}
+                </Typography>
+                <Box display="flex" alignItems="center">
+                    <FormControl variant="outlined" size="small" sx={{ mr: 2 }}>
+                        <Select
+                            value={limit}
+                            onChange={(e) => {
+                                setLimit(e.target.value);
+                                setPage(1); 
+                            }}
+                        >
+                            <MenuItem value={5}>5 / Page</MenuItem>
+                            <MenuItem value={10}>10 / Page</MenuItem>
+                            <MenuItem value={20}>20 / Page</MenuItem>
+                            <MenuItem value={50}>50 / Page</MenuItem>
+                        </Select>
+                    </FormControl>
+                    <Pagination
+                        count={totalPages} 
+                        page={page}       
+                        onChange={(event, value) => setPage(value)} 
+                        color="primary"
+                        disabled={loading}
+                        size="large"
+                    />
+                </Box>
+            </Box>
 
-            {/* --- MODAL FOR EDIT --- */}
-            <Dialog open={isModalOpen} onClose={handleCloseModal}>
-                <DialogTitle>
-                    Edit Customer ID: {editingCustomer?.id}
-                </DialogTitle>
-                <form onSubmit={handleFormUpdate}> {/* 👈 Update function call */}
-                    <DialogContent dividers>
-                        <TextField
-                            label="Customer Name"
-                            name="customer_name"
-                            value={formData.customer_name}
-                            onChange={handleFormChange}
-                            fullWidth margin="normal" required
-                        />
-                        <TextField
-                            label="Contact"
-                            name="contact"
-                            value={formData.contact}
-                            onChange={handleFormChange}
-                            fullWidth margin="normal" required
-                        />
-                        <TextField
-                            label="Area"
-                            name="area"
-                            value={formData.area}
-                            onChange={handleFormChange}
-                            fullWidth margin="normal" required
-                        />
-                        <TextField
-                            label="Tehsil"
-                            name="tehsil"
-                            value={formData.tehsil}
-                            onChange={handleFormChange}
-                            fullWidth margin="normal" required
-                        />
-                        <TextField
-                            label="Potential Bags"
-                            name="bags_potential"
-                            type="number"
-                            value={formData.bags_potential}
-                            onChange={handleFormChange}
-                            fullWidth margin="normal"
-                        />
-                        <TextField
-                            label="Type (Dealer/Farmer)"
-                            name="type"
-                            value={formData.type}
-                            onChange={handleFormChange}
-                            fullWidth margin="normal" required
-                        />
-                        {/* Modal ke andar ka error yahan dikhega */}
-                        {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>} 
-                    </DialogContent>
-                    <DialogActions>
-                        <Button onClick={handleCloseModal} color="error">
-                            Cancel
-                        </Button>
-                        <Button type="submit" variant="contained" color="primary">
-                            Save Changes
-                        </Button>
-                    </DialogActions>
-                </form>
-            </Dialog>
-            {/* --- END MODAL --- */}
+
+            {/* --- MODAL FOR EDIT / ADD (No change in component structure) --- */}
+            <CustomerFormDialog 
+                isOpen={isEditModalOpen}
+                handleClose={handleCloseModal}
+                formData={formData}
+                handleFormChange={handleFormChange}
+                handleFormAction={handleFormUpdate} // Now calls fetchCustomers() internally
+                error={error}
+                isEdit={true}
+                dialogTitle={`Edit Customer ID: ${editingCustomer?.id}`}
+                cities={cities}
+            />
+            
+            <CustomerFormDialog 
+                isOpen={isAddModalOpen}
+                handleClose={handleCloseModal}
+                formData={formData}
+                handleFormChange={handleFormChange}
+                handleFormAction={handleFormSubmit} // Now calls setPage(1) or fetchCustomers() internally
+                error={error}
+                isEdit={false}
+                dialogTitle="Add New Customer"
+                cities={cities}
+            />
+            
         </Box>
     );
-
-
-
-
 };
+
+
+// --- Customer Form Dialog Component (Reuseable) ---
+const CustomerFormDialog = ({ isOpen, handleClose, formData, handleFormChange, handleFormAction, error, isEdit, dialogTitle , cities }) => (
+    <Dialog open={isOpen} onClose={handleClose}>
+        <DialogTitle>{dialogTitle}</DialogTitle>
+        <form onSubmit={handleFormAction}>
+            <DialogContent dividers>
+                {/* Form Fields: Same as before */}
+                <TextField label="Customer Name" name="customer_name" value={formData.customer_name} onChange={handleFormChange} fullWidth margin="normal" required />
+                <TextField label="Contact" name="contact" value={formData.contact} onChange={handleFormChange} fullWidth margin="normal" required />
+                <TextField label="Area" name="area" value={formData.area} onChange={handleFormChange} fullWidth margin="normal" required />
+                <TextField label="Tehsil" name="tehsil" value={formData.tehsil} onChange={handleFormChange} fullWidth margin="normal" required />
+                
+                {/* 🚀 City Dropdown / Select */}
+                <FormControl fullWidth margin="normal">
+                    <InputLabel id="city-select-label">City</InputLabel>
+                    <Select
+                        labelId="city-select-label"
+                        label="City"
+                        name="city_id" 
+                        value={formData.city_id || ''} // Null check
+                        onChange={handleFormChange} 
+                        required 
+                    >
+                        <MenuItem value="">
+                            <em>Select City</em>
+                        </MenuItem>
+                        {/* ⚠️ cities array use kiya */}
+                        {cities.map((city) => (
+                            <MenuItem key={city.id} value={city.id}>
+                                {city.name || city.cityName} 
+                            </MenuItem>
+                        ))}
+                    </Select>
+                </FormControl>
+                <TextField label="Potential Bags" name="bags_potential" type="number" value={formData.bags_potential} onChange={handleFormChange} fullWidth margin="normal" />
+                <TextField label="Type (Dealer/Farmer)" name="type" value={formData.type} onChange={handleFormChange} fullWidth margin="normal" required />
+                
+                {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>} 
+            </DialogContent>
+            <DialogActions>
+                <Button onClick={handleClose} color="error">Cancel</Button>
+                <Button type="submit" variant="contained" color="primary">
+                    {isEdit ? 'Save Changes' : 'Add Customer'}
+                </Button>
+            </DialogActions>
+        </form>
+    </Dialog>
+);
+
 
 export default Customers;
