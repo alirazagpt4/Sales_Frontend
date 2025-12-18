@@ -137,6 +137,15 @@ const Users = () => {
     useEffect(() => {
         fetchUsers();
         fetchCities();
+        // 30 Seconds ka Interval setup karne ke liye
+    const interval = setInterval(() => {
+        console.log("Auto-refreshing user list...");
+        fetchUsers();
+    }, 10000); // 30000ms = 30 seconds
+
+    // Component unmount hote waqt interval ko clear karna zaroori hai
+    // warna memory leak ho sakti hai
+    return () => clearInterval(interval);
     }, [fetchUsers]);
     // ...
 
