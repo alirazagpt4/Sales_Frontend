@@ -4,6 +4,7 @@ import {
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
     CircularProgress, Alert, Divider, MenuItem, IconButton, Dialog, DialogContent, DialogTitle
 } from '@mui/material';
+import DownloadIcon from '@mui/icons-material/Download';
 import SearchIcon from '@mui/icons-material/Search';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import CloseIcon from '@mui/icons-material/Close';
@@ -43,6 +44,33 @@ const Reports = () => {
         console.log("Image Target URL:", finalUrl);
         setCurrentImg(finalUrl);
         setOpenImage(true);
+    };
+
+
+
+    const handleDownloadImage = async (imageUrl) => {
+        try {
+            const response = await fetch(imageUrl);
+            if (!response.ok) throw new Error('Network response was not ok');
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+
+            // File ka naam: Image URL se nikaal kar download ke liye set karna
+            const fileName = imageUrl.split('/').pop();
+            link.download = fileName || 'meter-reading.jpg';
+
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error("Download failed:", error);
+            // Agar fetch kaam na kare (CORS issue), toh direct link open kar dein
+            window.open(imageUrl, '_blank');
+        }
     };
 
     useEffect(() => {
@@ -287,10 +315,32 @@ const Reports = () => {
                     bgcolor: '#2e7d32',
                     color: 'white'
                 }}>
-                    <Typography variant="h6" sx={{ fontWeight: 'bold' }}>Meter Reading Proof</Typography>
-                    <IconButton onClick={() => setOpenImage(false)} sx={{ color: 'white' }}>
-                        <CloseIcon />
-                    </IconButton>
+                    <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                        Meter Reading Proof
+                    </Typography>
+
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        {/* --- Download Button --- */}
+                        <IconButton
+                            onClick={() => handleDownloadImage(currentImg)}
+                            sx={{
+                                color: 'white',
+                                mr: 1,
+                                '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' }
+                            }}
+                            title="Download Image"
+                        >
+                            <DownloadIcon /> {/* Yeh hai wo standard icon jo aap keh rahe hain */}
+                        </IconButton>
+
+                        {/* --- Close Button --- */}
+                        <IconButton
+                            onClick={() => setOpenImage(false)}
+                            sx={{ color: 'white' }}
+                        >
+                            <CloseIcon />
+                        </IconButton>
+                    </Box>
                 </DialogTitle>
 
                 <DialogContent
