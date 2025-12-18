@@ -32,8 +32,16 @@ const Reports = () => {
     const [currentImg, setCurrentImg] = useState('');
 
     const handleShowImage = (path) => {
-        const baseUrl = "http://38.242.201.229:3000/public/"; // Aapka static server URL
-        setCurrentImg(`${baseUrl}${path}`);
+        const baseUrl = "http://38.242.201.229:3000";
+
+        // Agar path "uploads/image-123.jpg" hai, toh humein sirf "image-123.jpg" chahiye
+        const fileName = path.split('/').pop();
+
+        // Final URL: http://38.242.201.229:3000/public/image-123.jpg
+        const finalUrl = `${baseUrl}/public/${fileName}`;
+
+        console.log("Image Target URL:", finalUrl);
+        setCurrentImg(finalUrl);
         setOpenImage(true);
     };
 
@@ -127,12 +135,74 @@ const Reports = () => {
             {/* --- Output Section --- */}
             {reportData && (
                 <TableContainer component={Paper} variant="outlined">
-                    <Box sx={{ p: 2, bgcolor: '#f5f5f5', borderBottom: '1px solid #ddd', display: 'flex', flexWrap: 'wrap', gap: 3 }}>
-                        <Typography variant="body2"><strong>Sales Person:</strong> {reportData.meta.sales_person}</Typography>
-                        <Typography variant="body2"><strong>Designation:</strong> {reportData.meta.designation}</Typography>
-                        <Typography variant="body2"><strong>City:</strong> {reportData.meta.city}</Typography>
-                        <Typography variant="body2"><strong>Total Visits:</strong> {reportData.meta.total_visits}</Typography>
-                        <Typography variant="body2"><strong>Range:</strong> {formatForDisplay(fromDate)} to {formatForDisplay(toDate)}</Typography>
+                    <Box sx={{
+                        p: 3,
+                        bgcolor: '#ffffff',
+                        borderBottom: '2px solid #2e7d32',
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        gap: 2,
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+                    }}>
+                        {/* Left Side: User Info */}
+                        <Box sx={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                            <Box>
+                                <Typography variant="caption" sx={{ color: '#666', display: 'block', textTransform: 'uppercase', fontWeight: 'bold', mb: 0.5 }}>
+                                    Sales Person
+                                </Typography>
+                                <Typography variant="body1" sx={{ fontWeight: 600, color: '#2c3e50' }}>
+                                    {reportData.meta.sales_person}
+                                </Typography>
+                            </Box>
+
+                            <Box>
+                                <Typography variant="caption" sx={{ color: '#666', display: 'block', textTransform: 'uppercase', fontWeight: 'bold', mb: 0.5 }}>
+                                    Designation
+                                </Typography>
+                                <Typography variant="body1" sx={{ color: '#2c3e50' }}>
+                                    {reportData.meta.designation}
+                                </Typography>
+                            </Box>
+
+                            <Box>
+                                <Typography variant="caption" sx={{ color: '#666', display: 'block', textTransform: 'uppercase', fontWeight: 'bold', mb: 0.5 }}>
+                                    City
+                                </Typography>
+                                <Typography variant="body1" sx={{ color: '#2c3e50' }}>
+                                    {reportData.meta.city}
+                                </Typography>
+                            </Box>
+
+                            <Box sx={{
+                                bgcolor: '#e8f5e9',
+                                px: 2,
+                                py: 0.5,
+                                borderRadius: '20px',
+                                border: '1px solid #c8e6c9',
+                                display: 'flex',
+                                alignItems: 'center'
+                            }}>
+                                <Typography variant="body2" sx={{ color: '#2e7d32', fontWeight: 'bold' }}>
+                                    Total Visits: {reportData.meta.total_visits}
+                                </Typography>
+                            </Box>
+                        </Box>
+
+                        {/* Right Side: Date Range */}
+                        <Box sx={{
+                            textAlign: { xs: 'left', sm: 'right' },
+                            borderLeft: { sm: '2px solid #eee' },
+                            pl: { sm: 3 }
+                        }}>
+                            <Typography variant="caption" sx={{ color: '#666', display: 'block', textTransform: 'uppercase', fontWeight: 'bold', mb: 0.5 }}>
+                                Report Period
+                            </Typography>
+                            <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#1b5e20', bgcolor: '#f1f8e9', p: '4px 12px', borderRadius: '4px' }}>
+                                {formatForDisplay(fromDate)} — {formatForDisplay(toDate)}
+                            </Typography>
+                        </Box>
                     </Box>
 
                     <Table size="small" sx={{ borderCollapse: 'collapse' }}>
@@ -196,20 +266,60 @@ const Reports = () => {
             )}
 
             {/* --- Image Preview Modal --- */}
-            <Dialog open={openImage} onClose={() => setOpenImage(false)} maxWidth="sm" fullWidth>
-                <DialogTitle sx={{ m: 0, p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', bgcolor: '#2e7d32', color: 'white' }}>
-                    Meter Reading Proof
+            <Dialog
+                open={openImage}
+                onClose={() => setOpenImage(false)}
+                maxWidth="md" // 'sm' se badha kar 'md' kar diya taake box bada ho
+                fullWidth
+                PaperProps={{
+                    sx: {
+                        borderRadius: '12px',
+                        overflow: 'hidden' // Header ke corners round rakhne ke liye
+                    }
+                }}
+            >
+                <DialogTitle sx={{
+                    m: 0,
+                    p: 2,
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    bgcolor: '#2e7d32',
+                    color: 'white'
+                }}>
+                    <Typography variant="h6" sx={{ fontWeight: 'bold' }}>Meter Reading Proof</Typography>
                     <IconButton onClick={() => setOpenImage(false)} sx={{ color: 'white' }}>
                         <CloseIcon />
                     </IconButton>
                 </DialogTitle>
-                <DialogContent dividers sx={{ p: 0, textAlign: 'center', bgcolor: '#f9f9f9' }}>
+
+                <DialogContent
+                    dividers
+                    sx={{
+                        p: 2, // Thori padding taake image bilkul deewaron se na lage
+                        textAlign: 'center',
+                        bgcolor: '#f0ececff', // Dark background taake image uth kar nazar aaye
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        minHeight: '400px' // Minimum height taake choti image par box collapse na kare
+                    }}
+                >
                     {currentImg && (
-                        <img 
-                            src={currentImg} 
-                            alt="Meter" 
-                            style={{ maxWidth: '100%', height: 'auto', display: 'block', margin: '0 auto' }} 
-                            onError={(e) => { e.target.src = 'https://via.placeholder.com/400?text=Image+Not+Found'; }}
+                        <img
+                            src={currentImg}
+                            alt="Meter Reading"
+                            style={{
+                                maxWidth: '100%',
+                                maxHeight: '70vh', // Screen ki 70% height se zyada na ho
+                                objectFit: 'contain', // Image ki ratio kharab nahi hogi
+                                boxShadow: '0 4px 20px rgba(0,0,0,0.5)', // Image par depth effect
+                                borderRadius: '4px'
+                            }}
+                            onError={(e) => {
+                                e.target.onerror = null; // Loop rokne ke liye
+                                e.target.src = 'https://placehold.jp/24/2e7d32/ffffff/400x400.png?text=Image+Not+Found';
+                            }}
                         />
                     )}
                 </DialogContent>
