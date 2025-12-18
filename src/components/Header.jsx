@@ -9,7 +9,7 @@ import {
     IconButton, 
     Avatar 
 } from '@mui/material';
-import SettingsIcon from '@mui/icons-material/Settings'; // Settings Icon ke liye
+import FilterListIcon from '@mui/icons-material/FilterList'; // Settings Icon ke liye
 import { useAuth } from '../context/authContext';
 
 
@@ -43,7 +43,7 @@ const Header = ({ drawerWidth }) => {
     };
 
     // 🎨 Green Color Setting (Logo se matching dark green)
-    const HeaderColor = '#4CAF50'; // Standard MUI Green (A500)
+    const HeaderColor = '#2e7d32'; // Standard MUI Green (A500)
     // Ya aap aur gehra dark green use kar sakte hain: '#388E3C'; 
 
     return (
@@ -61,7 +61,7 @@ const Header = ({ drawerWidth }) => {
                 <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center' }}>
                     
                     <Typography variant="h6" noWrap component="div" sx={{ color: '#fff' }}>
-                        Sales Admin Portal
+                        Farm Solutions Portal
                     </Typography>
                 </Box>
                 
@@ -77,7 +77,7 @@ const Header = ({ drawerWidth }) => {
                     >
                         {/* Settings Icon ko Avatar ke taur par use kiya */}
                         <Avatar sx={{ bgcolor: '#fff', color: HeaderColor, width: 32, height: 32 }}>
-                             <SettingsIcon fontSize="small" /> 
+                             <FilterListIcon fontSize="small" /> 
                         </Avatar>
                     </IconButton>
                     

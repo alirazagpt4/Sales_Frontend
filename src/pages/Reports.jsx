@@ -1,263 +1,219 @@
-import React, { useState } from 'react';
-import { 
-    Typography, 
-    Box, 
-    TextField, 
-    Button, 
-    Grid, 
-    Paper,
-    FormControl,
-    InputLabel,
-    Select,
-    MenuItem,
-    Table,         // Data display ke liye
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    CircularProgress, // Loading ke liye
-    Alert
+import React, { useState, useEffect } from 'react';
+import {
+    Typography, Box, TextField, Button, Grid, Paper,
+    Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
+    CircularProgress, Alert, Divider, MenuItem, IconButton, Dialog, DialogContent, DialogTitle
 } from '@mui/material';
-import DownloadIcon from '@mui/icons-material/Download';
 import SearchIcon from '@mui/icons-material/Search';
-import API from '../api/axiosClient.jsx'; // Assuming your configured Axios client
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import CloseIcon from '@mui/icons-material/Close';
+import API from '../api/axiosClient.jsx';
 
-// Table Headers jo aapke data keys se mapped hain
-const REPORT_HEADERS = [
-    { id: 'Date', label: 'Date' },
-    { id: 'AgentID', label: 'Agent ID' }, // Needs Agent Name mapping
-    { id: 'DayStartTime', label: 'Day Start Time' },
-    { id: 'TotalVisits', label: 'Total Visits' },
-    { id: 'UniqueCustomers', label: 'Unique Customers' },
-];
-
-
-// --- Helper function to convert CSV string to Array of Objects ---
-const csvToArray = (csvText) => {
-    // CSV headers aur rows ko line-by-line alag karna
-    const [headerLine, ...dataLines] = csvText.trim().split('\n').map(line => line.trim());
-    
-    // Headers ko keys banana
-    const headers = headerLine.split(',').map(h => h.replace(/"/g, ''));
-
-    if (dataLines.length === 0 || (dataLines.length === 1 && dataLines[0] === '')) return [];
-
-    // Har data line ko object mein convert karna
-    return dataLines.map(line => {
-        const values = line.split(',').map(v => v.replace(/"/g, ''));
-        return headers.reduce((obj, header, index) => {
-            // Numbers ko number mein convert karna
-            const value = values[index];
-            obj[header] = isNaN(Number(value)) || value.trim() === '' ? value : Number(value);
-            return obj;
-        }, {});
-    });
+// UI ke liye: Dec 16, 2025
+const formatForDisplay = (dateString) => {
+    if (!dateString) return "";
+    const options = { month: 'short', day: 'numeric', year: 'numeric' };
+    return new Date(dateString).toLocaleDateString('en-US', options);
 };
 
 const Reports = () => {
-    // Current date (today) and 7 days ago set kiye hain as defaults
-    const today = new Date().toISOString().split('T')[0];
-    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-
-    const [startDate, setStartDate] = useState(sevenDaysAgo);
-    const [endDate, setEndDate] = useState(today);
-    // Report Type ko "Activity" par set kar diya
-    const [reportType, setReportType] = useState('activity'); 
-    
+    const [selectedName, setSelectedName] = useState('');
+    const [fromDate, setFromDate] = useState(new Date().toISOString().split('T')[0]);
+    const [toDate, setToDate] = useState(new Date().toISOString().split('T')[0]);
+    const [users, setUsers] = useState([]);
     const [reportData, setReportData] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [fetchingUsers, setFetchingUsers] = useState(true);
     const [error, setError] = useState(null);
 
-    // Backend URL: http://localhost:3000/api/reports/detailed
-    const API_BASE_URL = API; // Assuming API points to http://localhost:3000
-    const REPORT_ENDPOINT = '/reports/detailed';
 
+    // Image Modal State
+    const [openImage, setOpenImage] = useState(false);
+    const [currentImg, setCurrentImg] = useState('');
 
-    
+    const handleShowImage = (path) => {
+        const baseUrl = "http://38.242.201.229:3000/public/"; // Aapka static server URL
+        setCurrentImg(`${baseUrl}${path}`);
+        setOpenImage(true);
+    };
 
-    const handleGenerateReport = async () => {
-        setLoading(true);
-        setReportData(null);
-        setError(null);
-
-        const params = { start: startDate, end: endDate };
-
-        try {
-            // 🚨 FIX 1: responseType: 'text' set kiya gaya hai
-            const response = await API.get(REPORT_ENDPOINT, { 
-                params,
-                responseType: 'text' 
-            });
-            
-            // 🚨 FIX 2: CSV string ko manually parse karna
-            const parsedData = csvToArray(response.data);
-
-            if (parsedData.length > 0) {
-                setReportData(parsedData);
-                // console.log("Parsed Data:", parsedData); // Check karne ke liye
-            } else {
-                 setError("No data found for the selected period.");
+    useEffect(() => {
+        const fetchUsersList = async () => {
+            try {
+                const response = await API.get('/users');
+                const data = response.data.users || response.data || [];
+                setUsers(Array.isArray(data) ? data : []);
+            } catch (err) {
+                setUsers([]);
+            } finally {
+                setFetchingUsers(false);
             }
+        };
+        fetchUsersList();
+    }, []);
 
+    const fetchReport = async () => {
+        if (!selectedName) {
+            setError("Please select a Sales Person.");
+            return;
+        }
+        setLoading(true);
+        setError(null);
+        try {
+            const response = await API.get('/reports/daily-report', {
+                params: { name: selectedName, fromDate, toDate }
+            });
+
+            if (response.data?.report?.length > 0) {
+                setReportData(response.data);
+            } else {
+                setReportData(null);
+                setError("No records found for the selected range.");
+            }
         } catch (err) {
-            console.error("Error fetching report data:", err);
-            // Error ko generic rakha
-            setError("Failed to fetch report data. Check network or API response format."); 
+            setError("Server error. Please try again.");
         } finally {
             setLoading(false);
         }
     };
 
-    const handleDownload = () => {
-        if (!reportData) {
-            alert("Please generate the report first before downloading.");
-            return;
-        }
-
-        // CSV download ke liye direct backend URL use karna zaroori hai
-        // Backend khud hi file generate karke bhej dega
-        const downloadUrl = `${API_BASE_URL}${REPORT_ENDPOINT}?start=${startDate}&end=${endDate}`;
-        
-        // Link create karke download trigger karna
-        const link = document.createElement('a');
-        link.href = downloadUrl;
-        link.setAttribute('download', `${reportType}_report_${startDate}_to_${endDate}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    };
-
-    // Render Function
     return (
-        <Box sx={{ p: 3 }}>
-            <Typography variant="h4" gutterBottom>
-                📅 Agent Activity Reports
+        <Box>
+            <Typography variant="h5" >
+                Daily Visit Reports
             </Typography>
+            <Divider sx={{ mb: 4 }} />
 
-            {/* --- 1. Filter Section --- */}
-            <Paper elevation={2} sx={{ p: 3, mb: 4 }}>
-                <Typography variant="h6" gutterBottom>
-                    Report Filters
-                </Typography>
-                <Grid container spacing={2} alignItems="flex-end">
-                    
-                    {/* Report Type Selector (Fixed to Activity) */}
-                    <Grid item xs={12} sm={4}>
-                         <FormControl fullWidth disabled> {/* Disable, kyunki abhi sirf Activity Report hai */}
-                             <InputLabel id="report-type-label">Report Type</InputLabel>
-                             <Select
-                                 labelId="report-type-label"
-                                 value={reportType}
-                                 label="Report Type"
-                                 onChange={(e) => setReportType(e.target.value)}
-                             >
-                                 <MenuItem value={'activity'}>Agent Activity Summary</MenuItem>
-                             </Select>
-                         </FormControl>
-                    </Grid>
-
-                    {/* Start Date Picker */}
+            {/* --- Filters Section --- */}
+            <Paper variant="outlined" sx={{ p: 2, mb: 3 }}>
+                <Grid container spacing={2} alignItems="center">
                     <Grid item xs={12} sm={3}>
                         <TextField
-                            label="Start Date"
-                            type="date"
-                            fullWidth
-                            value={startDate}
-                            onChange={(e) => setStartDate(e.target.value)}
-                            InputLabelProps={{ shrink: true }}
-                        />
-                    </Grid>
-
-                    {/* End Date Picker */}
-                    <Grid item xs={12} sm={3}>
-                        <TextField
-                            label="End Date"
-                            type="date"
-                            fullWidth
-                            value={endDate}
-                            onChange={(e) => setEndDate(e.target.value)}
-                            InputLabelProps={{ shrink: true }}
-                        />
-                    </Grid>
-
-                    {/* Generate Button */}
-                    <Grid item xs={12} sm={2}>
-                        <Button
-                            variant="contained"
-                            color="primary"
-                            fullWidth
-                            onClick={handleGenerateReport}
-                            startIcon={<SearchIcon />}
-                            sx={{ height: '56px' }}
-                            disabled={loading}
+                            select size="small" fullWidth value={selectedName}
+                            onChange={(e) => setSelectedName(e.target.value)}
+                            disabled={fetchingUsers}
+                            SelectProps={{ displayEmpty: true, renderValue: (val) => val || <span style={{ color: '#aaa' }}>Select Sales Person</span> }}
                         >
-                            {loading ? <CircularProgress size={24} color="inherit" /> : 'Generate'}
+                            <MenuItem value="" disabled>Select Sales Person</MenuItem>
+                            {users.map((u) => <MenuItem key={u.id} value={u.name}>{u.name}</MenuItem>)}
+                        </TextField>
+                    </Grid>
+
+                    <Grid item xs={12} sm={3}>
+                        <TextField size="small" fullWidth type="date" label="From" InputLabelProps={{ shrink: true }}
+                            value={fromDate} onChange={(e) => setFromDate(e.target.value)}
+                            InputProps={{ startAdornment: <Box sx={{ position: 'absolute', left: 10, bgcolor: '#fff', width: '80%', pointerEvents: 'none' }}><Typography variant="body2">{formatForDisplay(fromDate)}</Typography></Box> }}
+                        />
+                    </Grid>
+
+                    <Grid item xs={12} sm={3}>
+                        <TextField size="small" fullWidth type="date" label="To" InputLabelProps={{ shrink: true }}
+                            value={toDate} onChange={(e) => setToDate(e.target.value)}
+                            InputProps={{ startAdornment: <Box sx={{ position: 'absolute', left: 10, bgcolor: '#fff', width: '80%', pointerEvents: 'none' }}><Typography variant="body2">{formatForDisplay(toDate)}</Typography></Box> }}
+                        />
+                    </Grid>
+
+                    <Grid item xs={12} sm={3}>
+                        <Button variant="contained" disableElevation fullWidth startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <SearchIcon />}
+                            onClick={fetchReport} sx={{ bgcolor: '#2e7d32', '&:hover': { bgcolor: '#1b5e20' }, height: '40px' }}>
+                            Generate
                         </Button>
                     </Grid>
                 </Grid>
             </Paper>
 
-            {/* --- 2. Report Output Section --- */}
-            <Box>
-                <Paper elevation={3} sx={{ p: 3, minHeight: 400 }}>
-                    <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                        <Typography variant="h6">
-                            ACTIVITY REPORT PREVIEW
-                        </Typography>
-                        
-                        {/* Download Button */}
-                        <Button
-                            variant="outlined"
-                            color="success"
-                            onClick={handleDownload}
-                            startIcon={<DownloadIcon />}
-                            disabled={!reportData || reportData.length === 0} // Data hone par hi download hoga
-                        >
-                            Download CSV
-                        </Button>
+            {error && <Alert severity="info" sx={{ mb: 2 }}>{error}</Alert>}
+
+            {/* --- Output Section --- */}
+            {reportData && (
+                <TableContainer component={Paper} variant="outlined">
+                    <Box sx={{ p: 2, bgcolor: '#f5f5f5', borderBottom: '1px solid #ddd', display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+                        <Typography variant="body2"><strong>Sales Person:</strong> {reportData.meta.sales_person}</Typography>
+                        <Typography variant="body2"><strong>Designation:</strong> {reportData.meta.designation}</Typography>
+                        <Typography variant="body2"><strong>City:</strong> {reportData.meta.city}</Typography>
+                        <Typography variant="body2"><strong>Total Visits:</strong> {reportData.meta.total_visits}</Typography>
+                        <Typography variant="body2"><strong>Range:</strong> {formatForDisplay(fromDate)} to {formatForDisplay(toDate)}</Typography>
                     </Box>
-                    <hr />
-                    
-                    {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
-                    
-                    {/* --- Data Table --- */}
-                    {!loading && reportData && reportData.length > 0 ? (
-                        <TableContainer>
-                            <Table size="small">
-                                <TableHead>
-                                    <TableRow>
-                                        {REPORT_HEADERS.map((head) => (
-                                            <TableCell key={head.id} sx={{ fontWeight: 'bold' }}>
-                                                {head.label}
+
+                    <Table size="small" sx={{ borderCollapse: 'collapse' }}>
+                        <TableHead sx={{ bgcolor: '#eeeeee' }}>
+                            <TableRow>
+                                <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd', width: '120px' }}>Date</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>Customer Name</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>Area</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>Type</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>Status</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd', width: '120px' }}>Meter Reading</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {reportData.report.map((group, gIndex) => (
+                                group.visits.map((visit, vIndex) => (
+                                    <TableRow key={`${gIndex}-${vIndex}`}>
+                                        {/* ✅ Date: Merged Row */}
+                                        {vIndex === 0 && (
+                                            <TableCell
+                                                rowSpan={group.visits.length}
+                                                sx={{ border: '1px solid #ddd', textAlign: 'center', verticalAlign: 'middle', bgcolor: '#fff' }}
+                                            >
+                                                {formatForDisplay(group.date)}
                                             </TableCell>
-                                        ))}
+                                        )}
+
+                                        <TableCell sx={{ border: '1px solid #ddd' }}>{visit.customer_name}</TableCell>
+                                        <TableCell sx={{ border: '1px solid #ddd' }}>{visit.area}</TableCell>
+                                        <TableCell sx={{ border: '1px solid #ddd' }}>{visit.type}</TableCell>
+                                        <TableCell sx={{ border: '1px solid #ddd', color: '#2e7d32', fontWeight: 'bold' }}>{visit.status}</TableCell>
+
+                                        {/* Meter + Image Icon: Merged Row */}
+                                        {vIndex === 0 && (
+                                            <TableCell
+                                                rowSpan={group.visits.length}
+                                                sx={{ border: '1px solid #ddd', textAlign: 'center', verticalAlign: 'middle', bgcolor: '#fff' }}
+                                            >
+                                                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
+                                                    <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                                                        {group.meter_reading}
+                                                    </Typography>
+                                                    {group.photoUri && (
+                                                        <IconButton
+                                                            size="small"
+                                                            onClick={() => handleShowImage(group.photoUri)}
+                                                            sx={{ color: '#2e7d32', bgcolor: '#f0f4f0', '&:hover': { bgcolor: '#e0eee0' } }}
+                                                        >
+                                                            <VisibilityIcon fontSize="small" />
+                                                        </IconButton>
+                                                    )}
+                                                </Box>
+                                            </TableCell>
+                                        )}
                                     </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {reportData.map((row, index) => (
-                                        <TableRow key={index} hover>
-                                            {REPORT_HEADERS.map((head) => (
-                                                <TableCell key={head.id}>
-                                                    {/* Agar AgentID hai toh special note de sakte hain */}
-                                                    {head.id === 'AgentID' ? 
-                                                        `${row[head.id]} (Fix Agent Name)` : 
-                                                        row[head.id]
-                                                    }
-                                                </TableCell>
-                                            ))}
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
-                    ) : !loading && !error && (
-                         <Typography color="text.secondary" sx={{ mt: 5, textAlign: 'center' }}>
-                            {reportData === null ? "Click 'Generate' to fetch the report data." : "No data found for this date range."}
-                         </Typography>
+                                ))
+                            ))}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+            )}
+
+            {/* --- Image Preview Modal --- */}
+            <Dialog open={openImage} onClose={() => setOpenImage(false)} maxWidth="sm" fullWidth>
+                <DialogTitle sx={{ m: 0, p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', bgcolor: '#2e7d32', color: 'white' }}>
+                    Meter Reading Proof
+                    <IconButton onClick={() => setOpenImage(false)} sx={{ color: 'white' }}>
+                        <CloseIcon />
+                    </IconButton>
+                </DialogTitle>
+                <DialogContent dividers sx={{ p: 0, textAlign: 'center', bgcolor: '#f9f9f9' }}>
+                    {currentImg && (
+                        <img 
+                            src={currentImg} 
+                            alt="Meter" 
+                            style={{ maxWidth: '100%', height: 'auto', display: 'block', margin: '0 auto' }} 
+                            onError={(e) => { e.target.src = 'https://via.placeholder.com/400?text=Image+Not+Found'; }}
+                        />
                     )}
-                </Paper>
-            </Box>
+                </DialogContent>
+            </Dialog>
         </Box>
     );
 };

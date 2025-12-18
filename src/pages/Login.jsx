@@ -70,16 +70,16 @@ const Login = () => {
             src={farmSolution} 
             alt="farmlogo" 
             style={{
-                height: '110px',  // Height fixed
-                width: '110px',   // Width fixed
+                height: '170px',  // Height fixed
+                width: '170px',   // Width fixed
                 objectFit: 'contain', // Yeh sabse zaruri hai taaki image scale na ho
-                marginBottom: '16px' // Thoda space diya
+                marginBottom: '12px' // Thoda space diya
             }} 
         />
         
         {/* Typography ko Box ke andar rakha taaki center mein aaye */}
         <Typography variant="h5" component="h1" align="center" mt={1}>
-            Admin Login
+           Login
         </Typography>
     </Box>
 

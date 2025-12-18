@@ -14,7 +14,7 @@ import {
     Alert,
     TextField,
     Dialog, DialogTitle, DialogContent, DialogActions,
-    Select, MenuItem, InputLabel, FormControl, Pagination // Added back for role selection
+    Select, MenuItem, InputLabel, FormControl, Pagination, Grid, Divider// Added back for role selection
 } from '@mui/material';
 
 import API from '../api/axiosClient';
@@ -27,15 +27,15 @@ import PeopleIcon from '@mui/icons-material/People';
 // --- HEADERS for Users ---
 const HEADERS = [
     { label: 'ID', align: 'left' },
-    { label: 'Username', align: 'left' },
+    { label: 'User Name', align: 'left' },
     { label: 'Full Name', align: 'left' },
     { label: 'Designation', align: 'left' }, // ✅ NEW: Designation
-    { label: 'Email', align: 'left' },
+    // { label: 'Email', align: 'left' },
     { label: 'Mobile', align: 'left' },    // <--- ADD THIS
     { label: 'WhatsApp', align: 'left' },
     { label: 'Role', align: 'left' },
     { label: 'City', align: 'left' },        // ✅ NEW: City
-    { label: 'Referred To', align: 'left' },        // ✅ NEW: City
+    { label: 'Report To', align: 'left' },        // ✅ NEW: City
     { label: 'Actions', align: 'center' },
 ];
 
@@ -60,8 +60,8 @@ const AVAILABLE_ROLES = ['admin', 'user'];
 
 
 const Users = () => {
-    const { logout , user } = useAuth();
-    console.log("user .... in customers" , user);
+    const { logout, user } = useAuth();
+    console.log("user .... in customers", user);
 
     // --- State Management ---
     const [originalUsers, setOriginalUsers] = useState([]);
@@ -116,7 +116,7 @@ const Users = () => {
         setError(null);
         try {
             // API call mein pagination parameters bheje
-            const response = await API.get(`/users?page=${page}&limit=${USERS_PER_PAGE}`);
+            const response = await API.get(`/users`);
             console.log("USERSSSSS ......", response.data);
 
             // ✅ API Response Parsing Update
@@ -230,6 +230,7 @@ const Users = () => {
 
         const isEditMode = editingUser !== null;
         const method = isEditMode ? 'patch' : 'post';
+
         const url = isEditMode ? `/users/${editingUser.id}` : '/users/register';
 
         let payload = formData;
@@ -239,6 +240,7 @@ const Users = () => {
         if (isEditMode && !formData.password) {
             const { password, ...rest } = formData;
             payload = rest;
+            console.log("..... payload = rest " , rest);
 
         }
 
@@ -292,8 +294,8 @@ const Users = () => {
 
     // --- 6. Main Component Render ---
     return (
-        <Box>
-            <Typography variant="h4" gutterBottom>
+        <Box sx={{ p: 2 }}>
+            <Typography variant="h5" gutterBottom>
                 Users Management
             </Typography>
 
@@ -324,16 +326,23 @@ const Users = () => {
             </Box>
 
             {/* --- User Table --- */}
-            <TableContainer component={Paper} elevation={3}>
-                <Table sx={{ minWidth: 800 }} aria-label="user table">
+            {/* --- User Table --- */}
+            <TableContainer component={Paper} elevation={3} sx={{ borderRadius: '8px', overflow: 'hidden' }}>
+                <Table size="small" sx={{ minWidth: 800 }} aria-label="user table">
 
+                    {/* Header styling: Background dark green aur font bold */}
                     <TableHead sx={{ backgroundColor: '#f5f5f5' }}>
                         <TableRow>
                             {HEADERS.map(header => (
                                 <TableCell
                                     key={header.label}
                                     align={header.align}
-                                    sx={{ fontWeight: 'bold' }}
+                                    sx={{
+
+                                        fontWeight: 'bold',
+                                        fontSize: '0.75rem', // Header thora bara
+                                        py: 1.5
+                                    }}
                                 >
                                     {header.label}
                                 </TableCell>
@@ -345,63 +354,68 @@ const Users = () => {
                         {filteredUsers.map((user) => (
                             <TableRow
                                 key={user.id}
+                                hover
                                 sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                             >
-                                <TableCell>{user.id}</TableCell>
-                                <TableCell>{user.name}</TableCell>
-                                <TableCell
-                                    sx={{
-                                        minWidth: 150,           // Minimum width 150px
-                                        whiteSpace: 'nowrap'     // Text wrap band
-                                    }}
-                                >{user.fullname || 'N/A'}</TableCell>
-                                <TableCell
-                                    sx={{
-                                        minWidth: 120,           // Thori kam width
-                                        whiteSpace: 'nowrap'
-                                    }}
-                                >{user.designation || 'N/A'}</TableCell> {/* Display role */}
-                                <TableCell>{user.email}</TableCell>
-                                <TableCell>{user.mobile_ph || 'N/A'}</TableCell>
-                                <TableCell>{user.whatsapp_ph || 'N/A'}</TableCell>
-                                <TableCell>{user.role || 'N/A'}</TableCell> {/* Display role */}
-                                <TableCell>{user.cityDetails?.name || 'N/A'}</TableCell> {/* Display role */}
-                                <TableCell
-                                    sx={{
-                                        minWidth: 150,           // Full Name jitni ya thori zyada
-                                        whiteSpace: 'nowrap'
-                                    }}
-                                >{user.referred_to || 'N/A'}</TableCell> {/* Display role */}
-                                <TableCell align="center"
-                                    sx={{
-                                        minWidth: 150,           // Full Name jitni ya thori zyada
-                                        whiteSpace: 'nowrap'
-                                    }}
-                                >
-                                    <Button size="small" color="primary" startIcon={<EditIcon />} sx={{ minWidth: 0, p: '4px', mr: 1 }}
+                                {/* Table Cells: Font size chota kiya gaya hai (0.8rem) */}
+                                <TableCell sx={{ fontSize: '0.82rem', py: 1 }}>{user.id}</TableCell>
+                                <TableCell sx={{ fontSize: '0.82rem', fontWeight: 500 }}>{user.name}</TableCell>
+
+                                <TableCell sx={{
+                                    fontSize: '0.82rem',
+                                    minWidth: 130, // 150 se kam karkay 130 kiya
+                                    whiteSpace: 'nowrap'
+                                }}>
+                                    {user.fullname || 'N/A'}
+                                </TableCell>
+
+                                <TableCell sx={{
+                                    fontSize: '0.82rem',
+                                    minWidth: 110,
+                                    whiteSpace: 'nowrap'
+                                }}>
+                                    {user.designation || 'N/A'}
+                                </TableCell>
+
+                                <TableCell sx={{ fontSize: '0.82rem' }}>{user.mobile_ph || 'N/A'}</TableCell>
+                                <TableCell sx={{ fontSize: '0.82rem' }}>{user.whatsapp_ph || 'N/A'}</TableCell>
+                                <TableCell sx={{ fontSize: '0.82rem', textTransform: 'capitalize' }}>{user.role || 'N/A'}</TableCell>
+                                <TableCell sx={{ fontSize: '0.82rem' }}>{user.cityDetails?.name || 'N/A'}</TableCell>
+
+                                <TableCell sx={{
+                                    fontSize: '0.82rem',
+                                    minWidth: 120,
+                                    whiteSpace: 'nowrap'
+                                }}>
+                                    {user.referred_to || 'N/A'}
+                                </TableCell>
+
+                                {/* Actions Column: Buttons ko mazeed compact kiya gaya hai */}
+                                <TableCell align="center" sx={{ whiteSpace: 'nowrap' }}>
+                                    <Button
+                                        size="small"
+                                        color="primary"
                                         onClick={() => handleOpenEditModal(user)}
-                                    />
-                                    {/* ✅ NEW: View Button (Replaces Delete) */}
-                                    <Button size="small" color="info" startIcon={<PeopleIcon />} sx={{ minWidth: 0, p: '4px' }}
-                                        onClick={() => handleOpenViewModal(user)} // View Modal open karega
-                                    />
+                                        sx={{ minWidth: 0, p: 0.5, mr: 1 }}
+                                    >
+                                        <EditIcon fontSize="small" />
+                                    </Button>
+                                    <Button
+                                        size="small"
+                                        color="info"
+                                        onClick={() => handleOpenViewModal(user)}
+                                        sx={{ minWidth: 0, p: 0.5 }}
+                                    >
+                                        <PeopleIcon fontSize="small" />
+                                    </Button>
                                 </TableCell>
                             </TableRow>
                         ))}
-                        {filteredUsers.length === 0 && (
-                            <TableRow>
-                                <TableCell colSpan={HEADERS.length} align="center">
-                                    <Typography variant="subtitle1" color="textSecondary">
-                                        {loading ? "Fetching data..." : (searchTerm ? `No users found matching "${searchTerm}"` : "No users created yet.")}
-                                    </Typography>
-                                </TableCell>
-                            </TableRow>
-                        )}
                     </TableBody>
                 </Table>
             </TableContainer>
 
-            {totalPages > 1 && (
+            {/* {totalPages > 1 && (
                 <Box display="flex" justifyContent="center" mt={3} pb={2}>
                     <Pagination
                         count={totalPages}
@@ -413,7 +427,7 @@ const Users = () => {
                         showLastButton
                     />
                 </Box>
-            )}
+            )} */}
 
             {/* --- MODAL FOR ADD/EDIT (Role Select added) --- */}
             <Dialog open={isModalOpen} onClose={handleCloseModal} maxWidth="sm" fullWidth>
@@ -523,13 +537,30 @@ const Users = () => {
                                 fullWidth margin="normal"
                             />
 
-                            <TextField
-                                label="Referred To"
-                                name="referred_to"
-                                value={formData.referred_to}
-                                onChange={handleFormChange}
-                                fullWidth margin="normal"
-                            />
+                            {/* Referred To Dropdown */}
+                            <FormControl fullWidth margin="normal">
+                                <InputLabel id="referred-to-label">Referred To</InputLabel>
+                                <Select
+                                    labelId="referred-to-label"
+                                    label="Referred To"
+                                    name="referred_to"
+                                    value={formData.referred_to}
+                                    onChange={handleFormChange}
+                                >
+                                    <MenuItem value=""><em>None</em></MenuItem>
+
+                                    {/* 1. Agar koi purani value hai jo list mein nahi mil rahi, usay yahan add karein */}
+                                    {formData.referred_to && !originalUsers.find(u => u.name === formData.referred_to) && (
+                                        <MenuItem value={formData.referred_to}>{formData.referred_to}</MenuItem>
+                                    )}
+                                    {/* originalUsers array se names nikaal kar dropdown banaya */}
+                                    {originalUsers.map((u) => (
+                                        <MenuItem key={u.id} value={u.name}>
+                                            {u.name}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
 
                         </DialogContent>
                     </div>
@@ -546,29 +577,47 @@ const Users = () => {
 
 
             {/* ✅ NEW: VIEW DETAILS MODAL */}
-            <Dialog open={isViewModalOpen} onClose={handleCloseViewModal} maxWidth="xs" fullWidth>
-                <DialogTitle sx={{ backgroundColor: '#f0f0f0', color: '#333' }}>
+            <Dialog open={isViewModalOpen} onClose={handleCloseViewModal} maxWidth="sm" fullWidth>
+                <DialogTitle sx={{ backgroundColor: '#f0f0f0', color: '#333', }}>
                     User Details (ID: {viewingUser?.id})
                 </DialogTitle>
                 <DialogContent dividers>
                     {viewingUser ? (
-                        <Box>
-                            <Typography variant="body1" sx={{ mb: 1 }}>
-                                <strong>Username:</strong> {viewingUser.name}
-                            </Typography>
-                            <Typography variant="body1" sx={{ mb: 1 }}>
-                                <strong>Email:</strong> {viewingUser.email}
-                            </Typography>
-                            <Typography variant="body1" sx={{ mb: 1 }}>
-                                <strong>Role:</strong> {viewingUser.role.toUpperCase()}
-                            </Typography>
-                            <Typography variant="body1" sx={{ mb: 1 }}>
-                                <strong>Designation:</strong> {viewingUser.designation || 'N/A'}
-                            </Typography>
-                            <Typography variant="body1" sx={{ mb: 1 }}>
-                                <strong>City:</strong> {viewingUser.cityDetails?.name || 'N/A'}
-                            </Typography>
-                            <Typography variant="body2" sx={{ color: 'text.secondary', mt: 2 }}>
+                        <Box sx={{ p: 1 }}>
+                            {[
+                                { label: "Username", value: viewingUser.name },
+                                { label: "Full Name", value: viewingUser.fullname },
+                                { label: "Designation", value: viewingUser.designation },
+                                { label: "Mobile", value: viewingUser.mobile_ph },
+                                { label: "WhatsApp", value: viewingUser.whatsapp_ph },
+                                { label: "Reports To", value: viewingUser.referred_to },
+                                { label: "City", value: viewingUser.cityDetails?.name },
+                            ].map((item, index) => (
+                                <Grid container key={index} sx={{ mb: 1.5 }}>
+                                    {/* Static Label Section */}
+                                    <Grid item xs={5} sm={4}>
+                                        <Typography variant="body1" sx={{ fontWeight: 'bold', color: 'text.secondary' }}>
+                                            {item.label}
+                                        </Typography>
+                                    </Grid>
+
+                                    {/* Separator (Optional but looks clean) */}
+                                    <Grid item xs={1}>
+                                        <Typography variant="body1">:</Typography>
+                                    </Grid>
+
+                                    {/* Dynamic Value Section */}
+                                    <Grid item xs={6} sm={7}>
+                                        <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                                            {item.value || 'N/A'}
+                                        </Typography>
+                                    </Grid>
+                                </Grid>
+                            ))}
+
+                            <Divider sx={{ my: 2 }} />
+
+                            <Typography variant="body2" sx={{ color: 'text.secondary', textAlign: 'right' }}>
                                 Joined: {new Date(viewingUser.createdAt).toLocaleDateString()}
                             </Typography>
                         </Box>

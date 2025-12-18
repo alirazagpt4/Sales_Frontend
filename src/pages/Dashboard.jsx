@@ -200,15 +200,15 @@ const Dashboard = () => {
 
     // --- Main Component Render ---
     return (
-        <Box sx={{ p: 3 }}>
-            <Typography variant="h4" gutterBottom>
-                📊 Dashboard - Sales Activity
+        <Box sx={{ p: 1 }}>
+            <Typography variant="h5" gutterBottom>
+                 Dashboard 
             </Typography>
             
             {error && <Alert severity="warning" sx={{ mb: 3 }}>{error}</Alert>}
             
             {/* KPI Cards */}
-            <Grid container spacing={3}>
+            <Grid sx={{ p: 3 }} container spacing={3}>
                 {kpis.map((stat) => (
                     <Grid item xs={12} sm={6} md={3} key={stat.key}>
                         <KpiCard
@@ -224,7 +224,7 @@ const Dashboard = () => {
             
             {/* --- Detailed Reports Section (CHART ADDED) --- */}
             <Box sx={{ mt: 4 }}>
-                <Typography variant="h5" gutterBottom>
+                <Typography variant="h7" gutterBottom>
                     Activity Trend (Last 7 Days)
                 </Typography>
                 <Paper sx={{ p: 3, minHeight: 350, boxShadow: 3 }}>
