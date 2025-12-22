@@ -6,6 +6,7 @@ import {
 } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
 import SearchIcon from '@mui/icons-material/Search';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import CloseIcon from '@mui/icons-material/Close';
 import API from '../api/axiosClient.jsx';
@@ -17,6 +18,13 @@ const formatForDisplay = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', options);
 };
 
+// Time format function
+const formatTime = (dateString) => {
+    if (!dateString) return "N/A";
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+};
+
 const Reports = () => {
     const [selectedName, setSelectedName] = useState('');
     const [fromDate, setFromDate] = useState(new Date().toISOString().split('T')[0]);
@@ -26,6 +34,17 @@ const Reports = () => {
     const [loading, setLoading] = useState(false);
     const [fetchingUsers, setFetchingUsers] = useState(true);
     const [error, setError] = useState(null);
+
+
+    // google map handling for location
+    const handleOpenMap = (lat, lng) => {
+        if (!lat || !lng) {
+            alert("Coordinates not available");
+            return;
+        }
+        const url = `https://www.google.com/maps?q=${lat},${lng}`;
+        window.open(url, '_blank');
+    };
 
 
     // Image Modal State
@@ -138,14 +157,14 @@ const Reports = () => {
                     <Grid item xs={12} sm={3}>
                         <TextField size="small" fullWidth type="date" label="From" InputLabelProps={{ shrink: true }}
                             value={fromDate} onChange={(e) => setFromDate(e.target.value)}
-                            InputProps={{ startAdornment: <Box sx={{ position: 'absolute', left: 10, bgcolor: '#fff', width: '80%', pointerEvents: 'none' }}><Typography variant="body2">{formatForDisplay(fromDate)}</Typography></Box> }}
+                            InputProps={{ startAdornment: <Box sx={{ position: 'absolute', left: 10, bgcolor: '#fff', width: 'calc(100% - 45px)', pointerEvents: 'none' }}><Typography variant="body2">{formatForDisplay(fromDate)}</Typography></Box> }}
                         />
                     </Grid>
 
                     <Grid item xs={12} sm={3}>
                         <TextField size="small" fullWidth type="date" label="To" InputLabelProps={{ shrink: true }}
                             value={toDate} onChange={(e) => setToDate(e.target.value)}
-                            InputProps={{ startAdornment: <Box sx={{ position: 'absolute', left: 10, bgcolor: '#fff', width: '80%', pointerEvents: 'none' }}><Typography variant="body2">{formatForDisplay(toDate)}</Typography></Box> }}
+                            InputProps={{ startAdornment: <Box sx={{ position: 'absolute', left: 10, bgcolor: '#fff', width: 'calc(100% - 45px)', pointerEvents: 'none' }}><Typography variant="body2">{formatForDisplay(toDate)}</Typography></Box> }}
                         />
                     </Grid>
 
@@ -237,11 +256,14 @@ const Reports = () => {
                         <TableHead sx={{ bgcolor: '#eeeeee' }}>
                             <TableRow>
                                 <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd', width: '120px' }}>Date</TableCell>
+                                {/* Yahan visit hata kar simple Heading likhein */}
+                                <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>Time</TableCell>
                                 <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>Customer Name</TableCell>
                                 <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>Area</TableCell>
                                 <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>Type</TableCell>
-                                <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>Status</TableCell>
-                                <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd', width: '120px' }}>Meter Reading</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd', textAlign: 'center' }}>Visit Loc</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd', textAlign: 'center' }}>Day Start Info</TableCell>
+                                
                             </TableRow>
                         </TableHead>
                         <TableBody>
@@ -251,17 +273,23 @@ const Reports = () => {
                                         {/* ✅ Date: Merged Row */}
                                         {vIndex === 0 && (
                                             <TableCell
-                                                rowSpan={group.visits.length}
-                                                sx={{ border: '1px solid #ddd', textAlign: 'center', verticalAlign: 'middle', bgcolor: '#fff' }}
+                                            rowSpan={group.visits.length}
+                                            sx={{ border: '1px solid #ddd', textAlign: 'center', verticalAlign: 'middle', bgcolor: '#fff' }}
                                             >
                                                 {formatForDisplay(group.date)}
                                             </TableCell>
                                         )}
-
+                                      
+                                        <TableCell sx={{ border: '1px solid #ddd' }}>{formatTime(visit.createdAt || group.date)}</TableCell>
                                         <TableCell sx={{ border: '1px solid #ddd' }}>{visit.customer_name}</TableCell>
                                         <TableCell sx={{ border: '1px solid #ddd' }}>{visit.area}</TableCell>
                                         <TableCell sx={{ border: '1px solid #ddd' }}>{visit.type}</TableCell>
-                                        <TableCell sx={{ border: '1px solid #ddd', color: '#2e7d32', fontWeight: 'bold' }}>{visit.status}</TableCell>
+                                        {/* Visit Location Icon */}
+                                        <TableCell sx={{ border: '1px solid #ddd', textAlign: 'center' }}>
+                                            <IconButton size="small" color="primary" onClick={() => handleOpenMap(visit.visit_location?.lat, visit.visit_location?.lng)}>
+                                                <LocationOnIcon fontSize="small" />
+                                            </IconButton>
+                                        </TableCell>
 
                                         {/* Meter + Image Icon: Merged Row */}
                                         {vIndex === 0 && (
@@ -282,6 +310,9 @@ const Reports = () => {
                                                             <VisibilityIcon fontSize="small" />
                                                         </IconButton>
                                                     )}
+                                                    <IconButton size="small" color="secondary" onClick={() => handleOpenMap(group.start_location?.lat, group.start_location?.lng)}>
+                                                        <LocationOnIcon fontSize="small" />
+                                                    </IconButton>
                                                 </Box>
                                             </TableCell>
                                         )}
