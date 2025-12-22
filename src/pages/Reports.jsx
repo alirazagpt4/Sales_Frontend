@@ -263,7 +263,7 @@ const Reports = () => {
                                 <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>Type</TableCell>
                                 <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd', textAlign: 'center' }}>Visit Loc</TableCell>
                                 <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd', textAlign: 'center' }}>Day Start Info</TableCell>
-                                
+
                             </TableRow>
                         </TableHead>
                         <TableBody>
@@ -273,13 +273,13 @@ const Reports = () => {
                                         {/* ✅ Date: Merged Row */}
                                         {vIndex === 0 && (
                                             <TableCell
-                                            rowSpan={group.visits.length}
-                                            sx={{ border: '1px solid #ddd', textAlign: 'center', verticalAlign: 'middle', bgcolor: '#fff' }}
+                                                rowSpan={group.visits.length}
+                                                sx={{ border: '1px solid #ddd', textAlign: 'center', verticalAlign: 'middle', bgcolor: '#fff' }}
                                             >
                                                 {formatForDisplay(group.date)}
                                             </TableCell>
                                         )}
-                                      
+
                                         <TableCell sx={{ border: '1px solid #ddd' }}>{formatTime(visit.createdAt || group.date)}</TableCell>
                                         <TableCell sx={{ border: '1px solid #ddd' }}>{visit.customer_name}</TableCell>
                                         <TableCell sx={{ border: '1px solid #ddd' }}>{visit.area}</TableCell>
@@ -298,6 +298,17 @@ const Reports = () => {
                                                 sx={{ border: '1px solid #ddd', textAlign: 'center', verticalAlign: 'middle', bgcolor: '#fff' }}
                                             >
                                                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
+
+                                                    {/* --- Start Time Section --- */}
+                                                    <Box sx={{ mb: 1 }}>
+                                                        <Typography variant="caption" sx={{ color: '#666', fontWeight: 'bold', display: 'block', fontSize: '0.7rem' }}>
+                                                            STARTED AT
+                                                        </Typography>
+                                                        <Typography variant="body2" sx={{ color: '#1b5e20', fontWeight: '700', bgcolor: '#e8f5e9', px: 1, borderRadius: '4px' }}>
+                                                            {formatTime(group.start_time)}
+                                                        </Typography>
+                                                    </Box>
+
                                                     <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
                                                         {group.meter_reading}
                                                     </Typography>
