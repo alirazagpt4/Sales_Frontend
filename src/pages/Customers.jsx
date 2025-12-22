@@ -34,6 +34,7 @@ const HEADERS = [
     { label: 'Area', align: 'left' },
     { label: 'Tehsil', align: 'left' },
     { label: 'City', align: 'left' },
+    { label: 'Region', align: 'left' },
     { label: 'Potential Bags', align: 'right' },
     { label: 'Actions', align: 'center', width: 120 },
 ];
@@ -318,21 +319,22 @@ const Customers = () => {
                                 sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                             >
                                 {/* Data Cells: Chota font size taake spacing behtar ho */}
-                                <TableCell sx={{ fontSize: '0.82rem', py: 0.8 }}>{customer.id}</TableCell>
+                                <TableCell sx={{ fontSize: '0.70rem', py: 0.8 }}>{customer.id}</TableCell>
                                 <TableCell sx={{
-                                    fontSize: '0.82rem',
+                                    fontSize: '0.70rem',
                                     fontWeight: 500,
                                     minWidth: 140,
                                     whiteSpace: 'nowrap'
                                 }}>
                                     {customer.customer_name}
                                 </TableCell>
-                                <TableCell sx={{ fontSize: '0.82rem' }}>{customer.contact}</TableCell>
-                                <TableCell sx={{ fontSize: '0.82rem', textTransform: 'capitalize' }}>{customer.type}</TableCell>
-                                <TableCell sx={{ fontSize: '0.82rem' }}>{customer.area}</TableCell>
-                                <TableCell sx={{ fontSize: '0.82rem' }}>{customer.tehsil}</TableCell>
-                                <TableCell sx={{ fontSize: '0.82rem' }}>{customer.cityName}</TableCell>
-                                <TableCell align="right" sx={{ fontSize: '0.82rem', fontWeight: 'bold' }}>
+                                <TableCell sx={{ fontSize: '0.70rem' }}>{customer.contact}</TableCell>
+                                <TableCell sx={{ fontSize: '0.70rem', textTransform: 'capitalize' }}>{customer.type}</TableCell>
+                                <TableCell sx={{ fontSize: '0.70rem' }}>{customer.area}</TableCell>
+                                <TableCell sx={{ fontSize: '0.70rem' }}>{customer.tehsil}</TableCell>
+                                <TableCell sx={{ fontSize: '0.70rem' }}>{customer.cityName}</TableCell>
+                                <TableCell sx={{ fontSize: '0.70rem' }}>{customer.region || 'N/A'}</TableCell>
+                                <TableCell align="right" sx={{ fontSize: '0.70rem', fontWeight: 'bold' }}>
                                     {customer.bags_potential || 0}
                                 </TableCell>
 

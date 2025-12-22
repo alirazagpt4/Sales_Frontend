@@ -35,7 +35,8 @@ const HEADERS = [
     { label: 'WhatsApp', align: 'left' },
     { label: 'Role', align: 'left' },
     { label: 'City', align: 'left' },        // ✅ NEW: City
-    { label: 'Report To', align: 'left' },        // ✅ NEW: City
+    // { label: 'Report To', align: 'left' }, 
+    { label: 'Region', align: 'left' },       // ✅ NEW: City
     { label: 'Actions', align: 'center' },
 ];
 
@@ -367,11 +368,11 @@ const Users = () => {
                                 sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                             >
                                 {/* Table Cells: Font size chota kiya gaya hai (0.8rem) */}
-                                <TableCell sx={{ fontSize: '0.82rem', py: 1 }}>{user.id}</TableCell>
-                                <TableCell sx={{ fontSize: '0.82rem', fontWeight: 500 }}>{user.name}</TableCell>
+                                <TableCell sx={{ fontSize: '0.70rem', py: 1 }}>{user.id}</TableCell>
+                                <TableCell sx={{ fontSize: '0.70rem', fontWeight: 500 }}>{user.name}</TableCell>
 
                                 <TableCell sx={{
-                                    fontSize: '0.82rem',
+                                    fontSize: '0.70rem',
                                     minWidth: 130, // 150 se kam karkay 130 kiya
                                     whiteSpace: 'nowrap'
                                 }}>
@@ -379,24 +380,24 @@ const Users = () => {
                                 </TableCell>
 
                                 <TableCell sx={{
-                                    fontSize: '0.82rem',
+                                    fontSize: '0.70rem',
                                     minWidth: 110,
                                     whiteSpace: 'nowrap'
                                 }}>
                                     {user.designation || 'N/A'}
                                 </TableCell>
 
-                                <TableCell sx={{ fontSize: '0.82rem' }}>{user.mobile_ph || 'N/A'}</TableCell>
-                                <TableCell sx={{ fontSize: '0.82rem' }}>{user.whatsapp_ph || 'N/A'}</TableCell>
-                                <TableCell sx={{ fontSize: '0.82rem', textTransform: 'capitalize' }}>{user.role || 'N/A'}</TableCell>
-                                <TableCell sx={{ fontSize: '0.82rem' }}>{user.cityDetails?.name || 'N/A'}</TableCell>
+                                <TableCell sx={{ fontSize: '0.70rem' }}>{user.mobile_ph || 'N/A'}</TableCell>
+                                <TableCell sx={{ fontSize: '0.70rem' }}>{user.whatsapp_ph || 'N/A'}</TableCell>
+                                <TableCell sx={{ fontSize: '0.70rem', textTransform: 'capitalize' }}>{user.role || 'N/A'}</TableCell>
+                                <TableCell sx={{ fontSize: '0.70rem' }}>{user.cityDetails?.name || 'N/A'}</TableCell>
 
                                 <TableCell sx={{
-                                    fontSize: '0.82rem',
+                                    fontSize: '0.70rem',
                                     minWidth: 120,
                                     whiteSpace: 'nowrap'
                                 }}>
-                                    {user.referred_to || 'N/A'}
+                                    {user.region || 'N/A'}
                                 </TableCell>
 
                                 {/* Actions Column: Buttons ko mazeed compact kiya gaya hai */}
