@@ -16,9 +16,9 @@ import {
     TextField,
     Dialog, DialogTitle, DialogContent, DialogActions,
     Pagination,
-    Select, MenuItem, FormControl, InputLabel //
+    Select, MenuItem, FormControl, InputLabel, IconButton, Tooltip//
 } from '@mui/material';
-
+import LocationOnIcon from '@mui/icons-material/LocationOn';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -35,8 +35,9 @@ const HEADERS = [
     { label: 'Tehsil', align: 'left' },
     { label: 'City', align: 'left' },
     { label: 'Region', align: 'left' },
+    { label: 'Location', align: 'center', width: 80 },
     { label: 'Potential Bags', align: 'right' },
-    { label: 'Actions', align: 'center', width: 120 },
+    { label: 'Actions', align: 'center', width: 100 },
 ];
 
 // --- Helper Function for Status Badge (No change) ---
@@ -57,6 +58,15 @@ const getStatusChip = (status) => {
 // --- Main Component ---
 const Customers = () => {
     const { logout, user } = useAuth();
+
+    const openGoogleMaps = (lat, lng) => {
+        if (!lat || !lng) {
+            alert("Location coordinates not available for this customer.");
+            return;
+        }
+        const url = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+        window.open(url, '_blank');
+    };
 
 
     // 🚀 PAGINATION STATES
@@ -163,6 +173,8 @@ const Customers = () => {
             area: customer.area, tehsil: customer.tehsil,
             city_id: customer.city_id || '',
             bags_potential: customer.bags_potential, type: customer.type,
+            latitude: customer.latitude, // 👈 Lat
+            longitude: customer.longitude // 👈 Long
 
         });
         setIsEditModalOpen(true);
@@ -298,7 +310,7 @@ const Customers = () => {
                                     key={header.label}
                                     align={header.align}
                                     sx={{
-                                       
+
                                         fontWeight: 'bold',
                                         fontSize: '0.75rem', // Thora bara header
                                         whiteSpace: 'nowrap',
@@ -334,6 +346,18 @@ const Customers = () => {
                                 <TableCell sx={{ fontSize: '0.70rem' }}>{customer.tehsil}</TableCell>
                                 <TableCell sx={{ fontSize: '0.70rem' }}>{customer.cityName}</TableCell>
                                 <TableCell sx={{ fontSize: '0.70rem' }}>{customer.region || 'N/A'}</TableCell>
+                                <TableCell sx={{ fontSize: '0.65rem' }} align="center">
+                                    <Tooltip title="View on Google Maps">
+                                        <IconButton
+                                            color="secondary"
+                                            size="small"
+                                            onClick={() => openGoogleMaps(customer.latitude, customer.longitude)}
+                                            disabled={!customer.latitude || !customer.longitude}
+                                        >
+                                            <LocationOnIcon fontSize="small" sx={{ color: '#db4437' }} /> {/* Red color for Map Pin */}
+                                        </IconButton>
+                                    </Tooltip>
+                                </TableCell>
                                 <TableCell align="right" sx={{ fontSize: '0.70rem', fontWeight: 'bold' }}>
                                     {customer.bags_potential || 0}
                                 </TableCell>

@@ -120,6 +120,7 @@ const Reports = () => {
             });
 
             if (response.data?.report?.length > 0) {
+                console.log("Report Data: ........... ", response.data);
                 setReportData(response.data);
             } else {
                 setReportData(null);
@@ -280,7 +281,7 @@ const Reports = () => {
                                             </TableCell>
                                         )}
 
-                                        <TableCell sx={{ border: '1px solid #ddd' }}>{formatTime(visit.createdAt || group.date)}</TableCell>
+                                        <TableCell sx={{ border: '1px solid #ddd' }}>{visit.visit_time || 'N/A'}</TableCell>
                                         <TableCell sx={{ border: '1px solid #ddd' }}>{visit.customer_name}</TableCell>
                                         <TableCell sx={{ border: '1px solid #ddd' }}>{visit.area}</TableCell>
                                         <TableCell sx={{ border: '1px solid #ddd' }}>{visit.type}</TableCell>
