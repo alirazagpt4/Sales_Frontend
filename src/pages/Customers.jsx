@@ -28,15 +28,15 @@ import { useAuth } from '../context/authContext';
 // --- Zaroori Headers ---
 const HEADERS = [
     { label: 'ID', align: 'left', width: 50 },
+    { label: 'Type', align: 'left' },
     { label: 'Customer Name', align: 'left', width: 100 },
     { label: 'Contact', align: 'left', width: 100 },
-    { label: 'Type', align: 'left' },
     { label: 'Area', align: 'left' },
     { label: 'Tehsil', align: 'left' },
     { label: 'City', align: 'left' },
     { label: 'Region', align: 'left' },
     { label: 'Location', align: 'center', width: 80 },
-    { label: 'Potential Bags', align: 'right' },
+    { label: 'Bags', align: 'right'  },
     { label: 'Actions', align: 'center', width: 100 },
 ];
 
@@ -53,6 +53,9 @@ const getStatusChip = (status) => {
     }
     return <Chip label={status} color={color} size="small" />;
 };
+
+
+const REGIONS = ['Region 1', 'Region 2', 'Region 3', 'Region 4', 'Region 5'];
 
 
 // --- Main Component ---
@@ -84,7 +87,7 @@ const Customers = () => {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [editingCustomer, setEditingCustomer] = useState(null);
-    const initialFormData = { customer_name: '', contact: '', area: '', tehsil: '', cityId: '', bags_potential: 0, type: 'Dealer' };
+    const initialFormData = { customer_name: '', contact: '', area: '', tehsil: '', cityId: '', bags_potential: 0, type: 'Dealer', region: '', latitude: '', longitude: '' };
     const [formData, setFormData] = useState(initialFormData);
     const [cities, setCities] = useState([]);
 
@@ -173,6 +176,7 @@ const Customers = () => {
             area: customer.area, tehsil: customer.tehsil,
             city_id: customer.city_id || '',
             bags_potential: customer.bags_potential, type: customer.type,
+            region: customer.region || '',
             latitude: customer.latitude, // 👈 Lat
             longitude: customer.longitude // 👈 Long
 
@@ -193,22 +197,32 @@ const Customers = () => {
         e.preventDefault();
         setError(null);
 
-        try {
-            // API call to create customer
-            await API.post('/customers/create-customer', formData);
+        // 🚀 FIX: Khali strings ko null mein convert karna taaki DB crash na ho
+        const payload = {
+            ...formData,
+            // Agar value khali string hai to null bhejien, warna wahi value
+            latitude: formData.latitude === "" ? null : formData.latitude,
+            longitude: formData.longitude === "" ? null : formData.longitude,
+            region: formData.region === "" ? null : formData.region,
+            bags_potential: parseInt(formData.bags_potential) || 0
+        };
 
-            // Jab naya customer add hota hai, use page 1 par dikhana behtar hai.
-            // setPage(1) useEffect ko trigger karega aur naya data fetch ho jayega.
+        try {
+            console.log("Sending Payload:", payload); // Debugging ke liye
+
+            await API.post('/customers/create-customer', payload);
+
             if (page !== 1) setPage(1);
-            else fetchCustomers(); // Agar already page 1 par hain, toh manual fetch
+            else fetchCustomers();
 
             handleCloseModal();
         } catch (err) {
             console.error("Failed to add customer:", err);
-            const msg = err.response?.data?.error || "Error adding customer. Check required fields.";
+            // Error message ko behtar tarike se display karna
+            const msg = err.response?.data?.error || err.response?.data?.message || "Error adding customer.";
             setError(msg);
         }
-    }
+    };
 
     // 🚀 FIX: Handle Form Update (Edit Customer) - Refresh data instead of manual update
     const handleFormUpdate = async (e) => {
@@ -332,6 +346,7 @@ const Customers = () => {
                             >
                                 {/* Data Cells: Chota font size taake spacing behtar ho */}
                                 <TableCell sx={{ fontSize: '0.70rem', py: 0.8 }}>{customer.id}</TableCell>
+                                <TableCell sx={{ fontSize: '0.70rem', textTransform: 'capitalize' }}>{customer.type}</TableCell>
                                 <TableCell sx={{
                                     fontSize: '0.70rem',
                                     fontWeight: 500,
@@ -341,11 +356,16 @@ const Customers = () => {
                                     {customer.customer_name}
                                 </TableCell>
                                 <TableCell sx={{ fontSize: '0.70rem' }}>{customer.contact}</TableCell>
-                                <TableCell sx={{ fontSize: '0.70rem', textTransform: 'capitalize' }}>{customer.type}</TableCell>
                                 <TableCell sx={{ fontSize: '0.70rem' }}>{customer.area}</TableCell>
                                 <TableCell sx={{ fontSize: '0.70rem' }}>{customer.tehsil}</TableCell>
                                 <TableCell sx={{ fontSize: '0.70rem' }}>{customer.cityName}</TableCell>
-                                <TableCell sx={{ fontSize: '0.70rem' }}>{customer.region || 'N/A'}</TableCell>
+                                <TableCell sx={{
+                                    fontSize: '0.75rem',
+                                    fontWeight: 700, // Bold numbers
+                                    pr: 2, // Right padding
+                                    width: 70,
+                                    py: 0.5
+                                }} >{customer.region || 'N/A'}</TableCell>
                                 <TableCell sx={{ fontSize: '0.65rem' }} align="center">
                                     <Tooltip title="View on Google Maps">
                                         <IconButton
@@ -467,6 +487,7 @@ const CustomerFormDialog = ({ isOpen, handleClose, formData, handleFormChange, h
         <form onSubmit={handleFormAction}>
             <DialogContent dividers>
                 {/* Form Fields: Same as before */}
+                <TextField label="Type (Dealer/Farmer)" name="type" value={formData.type} onChange={handleFormChange} fullWidth margin="normal" required />
                 <TextField label="Customer Name" name="customer_name" value={formData.customer_name} onChange={handleFormChange} fullWidth margin="normal" required />
                 <TextField label="Contact" name="contact" value={formData.contact} onChange={handleFormChange} fullWidth margin="normal" required />
                 <TextField label="Area" name="area" value={formData.area} onChange={handleFormChange} fullWidth margin="normal" required />
@@ -494,8 +515,29 @@ const CustomerFormDialog = ({ isOpen, handleClose, formData, handleFormChange, h
                         ))}
                     </Select>
                 </FormControl>
+
+                {/* 🚀 Region Dropdown */}
+                <FormControl fullWidth margin="normal">
+                    <InputLabel id="region-select-label">Region</InputLabel>
+                    <Select
+                        labelId="region-select-label"
+                        label="Region"
+                        name="region"
+                        value={formData.region || ''}
+                        onChange={handleFormChange}
+                        required
+                    >
+                        <MenuItem value="">
+                            <em>Select Region</em>
+                        </MenuItem>
+                        {REGIONS.map((reg) => (
+                            <MenuItem key={reg} value={reg}>
+                                {reg}
+                            </MenuItem>
+                        ))}
+                    </Select>
+                </FormControl>
                 <TextField label="Potential Bags" name="bags_potential" type="number" value={formData.bags_potential} onChange={handleFormChange} fullWidth margin="normal" />
-                <TextField label="Type (Dealer/Farmer)" name="type" value={formData.type} onChange={handleFormChange} fullWidth margin="normal" required />
 
                 {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
             </DialogContent>

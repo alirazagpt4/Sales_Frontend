@@ -42,7 +42,6 @@ const HEADERS = [
 
 const initialFormData = {
     name: '',
-    email: '',
     role: 'user',
     password: '',
     // ✅ NEW FIELDS ADDED
@@ -51,13 +50,17 @@ const initialFormData = {
     whatsapp_ph: '',
     city_id: '', // Integer ID will be sent
     designation: '',
-    referred_to: ''
+    // referred_to: '',
+    region: ''
 };
 
 
 
 // Available roles: sirf Admin aur User
 const AVAILABLE_ROLES = ['admin', 'user'];
+
+// ✅ Regions ki list define ki
+const REGIONS = ['Region 1', 'Region 2', 'Region 3', 'Region 4', 'Region 5'];
 
 
 const Users = () => {
@@ -210,7 +213,6 @@ const Users = () => {
         setEditingUser(user);
         setFormData({
             name: user.name,
-            email: user.email,
             role: user.role.toLowerCase() || 'user', // Load existing role, default to 'user'
             password: '',
             // ✅ NEW FIELDS LOAD
@@ -219,7 +221,7 @@ const Users = () => {
             whatsapp_ph: String(user.whatsapp_ph || ''),
             city_id: String(user.city_id || ''), // Assuming cityDetails has id
             designation: String(user.designation || ''),
-            referred_to: String(user.referred_to || '')
+            region: String(user.region || ''),
         });
         setIsModalOpen(true);
     };
@@ -255,7 +257,7 @@ const Users = () => {
         }
 
         // Validation check
-        if (!payload.name || !payload.email || (!isEditMode && !payload.password)) {
+        if (!payload.name   || (!isEditMode && !payload.password)) {
             setError("Please fill all required fields.");
             return;
         }
@@ -317,7 +319,7 @@ const Users = () => {
             <Box display="flex" justifyContent="space-between" mb={2} alignItems="center">
 
                 <TextField
-                    label="Search Users (ID, Username, Email, Role)"
+                    label="Search Users by User Name"
                     variant="outlined"
                     size="small"
                     value={searchTerm}
@@ -452,27 +454,30 @@ const Users = () => {
                             {error && isModalOpen && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
                             <TextField
-                                label="Username"
-                                name="name"
-                                value={formData.name}
-                                onChange={handleFormChange}
-                                fullWidth margin="normal" required
-                            />
-                            <TextField
                                 label="Full Name"
                                 name="fullname"
                                 value={formData.fullname}
                                 onChange={handleFormChange}
                                 fullWidth margin="normal" required
                             />
+
+                              <TextField
+                                label="Designation"
+                                name="designation"
+                                value={formData.designation}
+                                onChange={handleFormChange}
+                                fullWidth margin="normal"
+                            />
+
                             <TextField
-                                label="Email"
-                                name="email"
-                                type="email"
-                                value={formData.email}
+                                label="Username"
+                                name="name"
+                                value={formData.name}
                                 onChange={handleFormChange}
                                 fullWidth margin="normal" required
                             />
+                            
+                           
 
                             <TextField
                                 label="Mobile Phone"
@@ -491,6 +496,44 @@ const Users = () => {
                                 onChange={handleFormChange}
                                 fullWidth margin="normal" required
                             />
+
+                            <FormControl fullWidth margin="normal" required>
+                                <InputLabel id="city-select-label">City</InputLabel>
+                                <Select
+                                    labelId="city-select-label"
+                                    label="City"
+                                    name="city_id" // Dhyan dein: name property 'city_id' hai
+                                    value={formData.city_id}
+                                    onChange={handleFormChange}
+                                >
+                                    <MenuItem value=""><em>Select City</em></MenuItem>
+                                    {cities.map(city => (
+                                        // Value mein City ID jaa raha hai, lekin Display mein City Name
+                                        <MenuItem key={city.id} value={city.id}>
+                                            {city.name}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+
+                                {/* ✅ Region Select (Replaced Referred To) */}
+                        <FormControl fullWidth margin="normal" required>
+                            <InputLabel id="region-select-label">Region</InputLabel>
+                            <Select
+                                labelId="region-select-label"
+                                label="Region"
+                                name="region"
+                                value={formData.region}
+                                onChange={handleFormChange}
+                            >
+                                <MenuItem value=""><em>Select Region</em></MenuItem>
+                                {REGIONS.map((reg) => (
+                                    <MenuItem key={reg} value={reg}>
+                                        {reg}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
 
                             {/* 🚨 Role Select Field Added Back */}
                             <FormControl fullWidth margin="normal" required>
@@ -520,34 +563,10 @@ const Users = () => {
                             />
 
 
-                            <FormControl fullWidth margin="normal" required>
-                                <InputLabel id="city-select-label">City</InputLabel>
-                                <Select
-                                    labelId="city-select-label"
-                                    label="City"
-                                    name="city_id" // Dhyan dein: name property 'city_id' hai
-                                    value={formData.city_id}
-                                    onChange={handleFormChange}
-                                >
-                                    <MenuItem value=""><em>Select City</em></MenuItem>
-                                    {cities.map(city => (
-                                        // Value mein City ID jaa raha hai, lekin Display mein City Name
-                                        <MenuItem key={city.id} value={city.id}>
-                                            {city.name}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
+                            
+                          
 
-                            <TextField
-                                label="Designation"
-                                name="designation"
-                                value={formData.designation}
-                                onChange={handleFormChange}
-                                fullWidth margin="normal"
-                            />
-
-                            {/* Referred To Dropdown */}
+                            {/* Referred To Dropdown
                             <FormControl fullWidth margin="normal">
                                 <InputLabel id="referred-to-label">Referred To</InputLabel>
                                 <Select
@@ -560,17 +579,18 @@ const Users = () => {
                                     <MenuItem value=""><em>None</em></MenuItem>
 
                                     {/* 1. Agar koi purani value hai jo list mein nahi mil rahi, usay yahan add karein */}
-                                    {formData.referred_to && !originalUsers.find(u => u.name === formData.referred_to) && (
+                                    {/* {formData.referred_to && !originalUsers.find(u => u.name === formData.referred_to) && (
                                         <MenuItem value={formData.referred_to}>{formData.referred_to}</MenuItem>
                                     )}
                                     {/* originalUsers array se names nikaal kar dropdown banaya */}
-                                    {originalUsers.map((u) => (
+                                    {/* {originalUsers.map((u) => (
                                         <MenuItem key={u.id} value={u.name}>
                                             {u.name}
                                         </MenuItem>
                                     ))}
                                 </Select>
-                            </FormControl>
+                            </FormControl> */} 
+                        
 
                         </DialogContent>
                     </div>
@@ -600,7 +620,7 @@ const Users = () => {
                                 { label: "Designation", value: viewingUser.designation },
                                 { label: "Mobile", value: viewingUser.mobile_ph },
                                 { label: "WhatsApp", value: viewingUser.whatsapp_ph },
-                                { label: "Reports To", value: viewingUser.referred_to },
+                                
                                 { label: "City", value: viewingUser.cityDetails?.name },
                             ].map((item, index) => (
                                 <Grid container key={index} sx={{ mb: 1.5 }}>
