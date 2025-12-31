@@ -262,6 +262,7 @@ const Reports = () => {
                                 <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>Customer Name</TableCell>
                                 <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>Area</TableCell>
                                 <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>Type</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>Region</TableCell>
                                 <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>Visit Purpose</TableCell>
                                 <TableCell sx={{
                                     fontWeight: 'bold',
@@ -271,7 +272,7 @@ const Reports = () => {
                                     lineHeight: '1.2',    // Lines ke darmiyan gap kam karega
                                     textAlign: 'center'
                                 }}>Bags Potential</TableCell>
-                                <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd', textAlign: 'center' }}>Visit Loc</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd', textAlign: 'center' }}>Visit Location</TableCell>
                                 <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd', textAlign: 'center' }}>Day Start Info</TableCell>
 
                             </TableRow>
@@ -294,6 +295,7 @@ const Reports = () => {
                                         <TableCell sx={{ border: '1px solid #ddd' }}>{visit.customer_name}</TableCell>
                                         <TableCell sx={{ border: '1px solid #ddd' }}>{visit.area}</TableCell>
                                         <TableCell sx={{ border: '1px solid #ddd' }}>{visit.type}</TableCell>
+                                        <TableCell sx={{ border: '1px solid #ddd' }}>{visit.region}</TableCell>
                                         <TableCell sx={{ border: '1px solid #ddd' }}>{visit.visit_purpose}</TableCell>
                                         <TableCell sx={{
                                             border: '1px solid #ddd',

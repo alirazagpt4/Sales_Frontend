@@ -28,15 +28,15 @@ import { useAuth } from '../context/authContext';
 // --- Zaroori Headers ---
 const HEADERS = [
     { label: 'ID', align: 'left', width: 50 },
-    { label: 'Type', align: 'left' },
-    { label: 'Customer Name', align: 'left', width: 100 },
-    { label: 'Contact', align: 'left', width: 100 },
+    { label: 'Type', align: 'left' ,  width:30 },
+    { label: 'Customer Name', align: 'left', width: 80 },
+    { label: 'Contact', align: 'left', width: 80 },
     { label: 'Area', align: 'left' },
     { label: 'Tehsil', align: 'left' },
     { label: 'City', align: 'left' },
     { label: 'Region', align: 'left' },
     { label: 'Location', align: 'center', width: 80 },
-    { label: 'Bags', align: 'right'  },
+    { label: 'Bags Potential', align: 'center', width: 100 },
     { label: 'Actions', align: 'center', width: 100 },
 ];
 
@@ -378,7 +378,7 @@ const Customers = () => {
                                         </IconButton>
                                     </Tooltip>
                                 </TableCell>
-                                <TableCell align="right" sx={{ fontSize: '0.70rem', fontWeight: 'bold' }}>
+                                <TableCell align="center" sx={{ fontSize: '0.70rem', fontWeight: 'bold' }}>
                                     {customer.bags_potential || 0}
                                 </TableCell>
 
