@@ -24,19 +24,24 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import API from '../api/axiosClient';
 import { useAuth } from '../context/authContext';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+
+
 
 // --- Zaroori Headers ---
 const HEADERS = [
     { label: 'ID', align: 'left', width: 50 },
-    { label: 'Type', align: 'left' ,  width:30 },
+    { label: 'Type', align: 'left', width: 30 },
     { label: 'Customer Name', align: 'left', width: 80 },
     { label: 'Contact', align: 'left', width: 80 },
-    { label: 'Area', align: 'left' },
+
+
     { label: 'Tehsil', align: 'left' },
     { label: 'City', align: 'left' },
     { label: 'Region', align: 'left' },
     { label: 'Location', align: 'center', width: 80 },
     { label: 'Bags Potential', align: 'center', width: 100 },
+    { label: 'Sales Person', align: 'left', width: 100 },
     { label: 'Actions', align: 'center', width: 100 },
 ];
 
@@ -87,7 +92,7 @@ const Customers = () => {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [editingCustomer, setEditingCustomer] = useState(null);
-    const initialFormData = { customer_name: '', contact: '', area: '', tehsil: '', cityId: '', bags_potential: 0, type: 'Dealer', region: '', latitude: '', longitude: '' };
+    const initialFormData = { customer_name: '', contact: '', area: '', tehsil: '', cityId: '', bags_potential: 0, type: 'Dealer',district:'' , division:'' , province:'' , region: '', latitude: '', longitude: '' };
     const [formData, setFormData] = useState(initialFormData);
     const [cities, setCities] = useState([]);
 
@@ -147,6 +152,21 @@ const Customers = () => {
 
 
 
+    // ✅ View Modal States
+    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+    const [viewingCustomer, setViewingCustomer] = useState(null);
+
+    // ✅ View Handlers
+    const handleOpenViewModal = (customer) => {
+        setViewingCustomer(customer);
+        setIsViewModalOpen(true);
+    };
+
+    const handleCloseViewModal = () => {
+        setViewingCustomer(null);
+        setIsViewModalOpen(false);
+    };
+
 
 
     // --- FORM HANDLERS (Same) ---
@@ -177,6 +197,9 @@ const Customers = () => {
             city_id: customer.city_id || '',
             bags_potential: customer.bags_potential, type: customer.type,
             region: customer.region || '',
+            district: customer.district || '',
+            division: customer.division || '',
+            province: customer.province || '',
             latitude: customer.latitude, // 👈 Lat
             longitude: customer.longitude // 👈 Long
 
@@ -204,6 +227,9 @@ const Customers = () => {
             latitude: formData.latitude === "" ? null : formData.latitude,
             longitude: formData.longitude === "" ? null : formData.longitude,
             region: formData.region === "" ? null : formData.region,
+            district: formData.district === "" ? null : formData.district,
+            division: formData.division === "" ? null : formData.division,
+            province: formData.province === "" ? null : formData.province,
             bags_potential: parseInt(formData.bags_potential) || 0
         };
 
@@ -356,7 +382,7 @@ const Customers = () => {
                                     {customer.customer_name}
                                 </TableCell>
                                 <TableCell sx={{ fontSize: '0.70rem' }}>{customer.contact}</TableCell>
-                                <TableCell sx={{ fontSize: '0.70rem' }}>{customer.area}</TableCell>
+
                                 <TableCell sx={{ fontSize: '0.70rem' }}>{customer.tehsil}</TableCell>
                                 <TableCell sx={{ fontSize: '0.70rem' }}>{customer.cityName}</TableCell>
                                 <TableCell sx={{
@@ -381,6 +407,9 @@ const Customers = () => {
                                 <TableCell align="center" sx={{ fontSize: '0.70rem', fontWeight: 'bold' }}>
                                     {customer.bags_potential || 0}
                                 </TableCell>
+                                <TableCell align="center" sx={{ fontSize: '0.70rem', fontWeight: 'bold' }}>
+                                    {customer.createdBy || 0}
+                                </TableCell>
 
                                 {/* Compact Actions Column */}
                                 <TableCell align="center" sx={{ whiteSpace: 'nowrap' }}>
@@ -399,6 +428,14 @@ const Customers = () => {
                                         sx={{ minWidth: 0, p: 0.5 }}
                                     >
                                         <DeleteIcon fontSize="small" />
+                                    </Button>
+                                    <Button
+                                        size="small"
+                                        color="info"
+                                        onClick={() => handleOpenViewModal(customer)} // customer aapka map ka variable hoga
+                                        sx={{ minWidth: 0, p: 0.5 }}
+                                    >
+                                        <VisibilityIcon fontSize="small" />
                                     </Button>
                                 </TableCell>
                             </TableRow>
@@ -475,6 +512,12 @@ const Customers = () => {
                 cities={cities}
             />
 
+            <ViewCustomerDialog
+                isOpen={isViewModalOpen}
+                handleClose={handleCloseViewModal}
+                customer={viewingCustomer}
+            />
+
         </Box>
     );
 };
@@ -490,7 +533,7 @@ const CustomerFormDialog = ({ isOpen, handleClose, formData, handleFormChange, h
                 <TextField label="Type (Dealer/Farmer)" name="type" value={formData.type} onChange={handleFormChange} fullWidth margin="normal" required />
                 <TextField label="Customer Name" name="customer_name" value={formData.customer_name} onChange={handleFormChange} fullWidth margin="normal" required />
                 <TextField label="Contact" name="contact" value={formData.contact} onChange={handleFormChange} fullWidth margin="normal" required />
-                <TextField label="Area" name="area" value={formData.area} onChange={handleFormChange} fullWidth margin="normal" required />
+                <TextField label="Address" name="area" value={formData.area} onChange={handleFormChange} fullWidth margin="normal" required />
                 <TextField label="Tehsil" name="tehsil" value={formData.tehsil} onChange={handleFormChange} fullWidth margin="normal" required />
 
                 {/* 🚀 City Dropdown / Select */}
@@ -515,6 +558,10 @@ const CustomerFormDialog = ({ isOpen, handleClose, formData, handleFormChange, h
                         ))}
                     </Select>
                 </FormControl>
+
+                <TextField label="District" name="district" value={formData.district} onChange={handleFormChange} fullWidth margin="normal" />
+                <TextField label="Division" name="division" value={formData.division} onChange={handleFormChange} fullWidth margin="normal" />
+                <TextField label="Province" name="province" value={formData.province} onChange={handleFormChange} fullWidth margin="normal" />
 
                 {/* 🚀 Region Dropdown */}
                 <FormControl fullWidth margin="normal">
@@ -550,6 +597,65 @@ const CustomerFormDialog = ({ isOpen, handleClose, formData, handleFormChange, h
         </form>
     </Dialog>
 );
+
+
+// --- View Customer Modal (Jaisa aapne manga) ---
+const ViewCustomerDialog = ({ isOpen, handleClose, customer }) => {
+    if (!customer) return null;
+
+    return (
+        <Dialog open={isOpen} onClose={handleClose} fullWidth maxWidth="sm">
+            <DialogTitle sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5' }}>
+                Customer Information
+            </DialogTitle>
+            <DialogContent dividers>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, py: 1 }}>
+
+                    {/* Basic Info */}
+                    <Box display="flex" justifyContent="space-between">
+                        <Typography variant="subtitle2"><strong>Name:</strong> {customer.customer_name}</Typography>
+                        <Typography variant="subtitle2"><strong>Type:</strong> {customer.type}</Typography>
+                    </Box>
+
+                    <Box display="flex" justifyContent="space-between">
+                        <Typography variant="subtitle2"><strong>Contact:</strong> {customer.contact}</Typography>
+                        <Typography variant="subtitle2"><strong>Region:</strong> {customer.region || 'N/A'}</Typography>
+                    </Box>
+
+                    <hr style={{ border: '0.1px solid #eee', width: '100%' }} />
+
+                    {/* Location Info (New Fields Added Here) */}
+                    <Typography variant="body2" color="primary" sx={{ fontWeight: 'bold' }}>Location Details:</Typography>
+
+                    <Box display="grid" gridTemplateColumns="1fr 1fr" gap={2}>
+                        <Typography variant="body2"><strong>Address:</strong> {customer.area || 'N/A'}</Typography>
+                        <Typography variant="body2"><strong>Tehsil:</strong> {customer.tehsil || 'N/A'}</Typography>
+
+                        <Typography variant="body2"><strong>City:</strong> {customer.cityName || 'N/A'}</Typography>
+                        <Typography variant="body2"><strong>District:</strong> {customer.district || 'N/A'}</Typography>
+
+                        <Typography variant="body2"><strong>Division:</strong> {customer.division || 'N/A'}</Typography>
+                        <Typography variant="body2"><strong>Province:</strong> {customer.province || 'N/A'}</Typography>
+                    </Box>
+
+                    <hr style={{ border: '0.1px solid #eee', width: '100%' }} />
+
+                    {/* Business Info */}
+                    <Box display="flex" justifyContent="space-between">
+                        <Typography variant="body2"><strong>Potential:</strong> {customer.bags_potential} Bags</Typography>
+                        <Typography variant="body2"><strong>Created By:</strong> {customer.createdBy || 'N/A'}</Typography>
+                    </Box>
+
+                </Box>
+            </DialogContent>
+            <DialogActions>
+                <Button onClick={handleClose} variant="contained" color="primary">
+                    Close
+                </Button>
+            </DialogActions>
+        </Dialog>
+    );
+};
 
 
 export default Customers;

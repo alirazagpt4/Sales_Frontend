@@ -17,6 +17,8 @@ import {
     Select, MenuItem, InputLabel, FormControl, Pagination, Grid, Divider// Added back for role selection
 } from '@mui/material';
 
+import VisibilityIcon from '@mui/icons-material/Visibility';
+
 import API from '../api/axiosClient';
 import { useAuth } from '../context/authContext';
 import EditIcon from '@mui/icons-material/Edit';
@@ -418,7 +420,7 @@ const Users = () => {
                                         onClick={() => handleOpenViewModal(user)}
                                         sx={{ minWidth: 0, p: 0.5 }}
                                     >
-                                        <PeopleIcon fontSize="small" />
+                                        <VisibilityIcon fontSize="small" />
                                     </Button>
                                 </TableCell>
                             </TableRow>
@@ -506,7 +508,7 @@ const Users = () => {
                                     value={formData.city_id}
                                     onChange={handleFormChange}
                                 >
-                                    <MenuItem value=""><em>Select City</em></MenuItem>
+                                    <MenuItem value=""><em>Select Tehsil</em></MenuItem>
                                     {cities.map(city => (
                                         // Value mein City ID jaa raha hai, lekin Display mein City Name
                                         <MenuItem key={city.id} value={city.id}>
