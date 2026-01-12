@@ -62,7 +62,18 @@ const initialFormData = {
 const AVAILABLE_ROLES = ['admin', 'user'];
 
 // ✅ Regions ki list define ki
-const REGIONS = ['Region 1', 'Region 2', 'Region 3', 'Region 4', 'Region 5'];
+const REGIONS = [
+  'Gojra', 
+  'Sargodha', 
+  'Jhang', 
+  'South', 
+  'Rahim Yar Khan', 
+  'Layyah', 
+  'Sahiwal', 
+  'Narowal', 
+  'Pindi Bhattian', 
+  'Gujranwala'
+];
 
 
 const Users = () => {
@@ -365,14 +376,14 @@ const Users = () => {
                     </TableHead>
 
                     <TableBody>
-                        {filteredUsers.map((user) => (
+                        {filteredUsers.map((user , index) => (
                             <TableRow
                                 key={user.id}
                                 hover
                                 sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                             >
                                 {/* Table Cells: Font size chota kiya gaya hai (0.8rem) */}
-                                <TableCell sx={{ fontSize: '0.70rem', py: 1 }}>{user.id}</TableCell>
+                                <TableCell sx={{ fontSize: '0.70rem', py: 1 }}>{index + 1}</TableCell>
                                 <TableCell sx={{ fontSize: '0.70rem', fontWeight: 500 }}>{user.name}</TableCell>
 
                                 <TableCell sx={{
