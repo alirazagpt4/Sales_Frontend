@@ -35,6 +35,17 @@ const Reports = () => {
     const [fetchingUsers, setFetchingUsers] = useState(true);
     const [error, setError] = useState(null);
 
+   
+//    purpose label mapping
+    const getVisitPurposeLabel = (purpose) => {
+        const mapping = {
+            'New': 'Customer Regular Visit',
+            'Old': 'Follow Up Visit',
+            'Mature': 'Mature Order'
+        };
+        return mapping[purpose] || purpose; // Agar koi naya code ho toh wahi dikha de
+    };
+
 
     // google map handling for location
     const handleOpenMap = (lat, lng) => {
@@ -93,19 +104,27 @@ const Reports = () => {
     };
 
     useEffect(() => {
-        const fetchUsersList = async () => {
-            try {
-                const response = await API.get('/users');
-                const data = response.data.users || response.data || [];
-                setUsers(Array.isArray(data) ? data : []);
-            } catch (err) {
-                setUsers([]);
-            } finally {
-                setFetchingUsers(false);
-            }
-        };
-        fetchUsersList();
-    }, []);
+    const fetchUsersList = async () => {
+        try {
+            const response = await API.get('/users');
+            const data = response.data.users || response.data || [];
+            
+            // Yahan filter lagaya hai taake 'admin' nikal jaye
+            // Agar aapke database mein field ka naam 'role' hai toh u.role use karein
+            // Agar aap 'admin' ko uske naam se pehchante hain toh u.name use karein
+            const filteredUsers = Array.isArray(data) 
+                ? data.filter(u => u.role !== 'admin' && u.name.toLowerCase() !== 'admin') 
+                : [];
+
+            setUsers(filteredUsers);
+        } catch (err) {
+            setUsers([]);
+        } finally {
+            setFetchingUsers(false);
+        }
+    };
+    fetchUsersList();
+}, []);
 
     const fetchReport = async () => {
         if (!selectedName) {
@@ -180,76 +199,76 @@ const Reports = () => {
 
             {error && <Alert severity="info" sx={{ mb: 2 }}>{error}</Alert>}
 
-           {/* --- Output Section Header --- */}
-{reportData && (
-    <TableContainer component={Paper} variant="outlined">
-        <Box sx={{
-            p: 2,
-            bgcolor: '#ffffff',
-            borderBottom: '2px solid #2e7d32',
-            display: 'flex',
-            flexWrap: 'nowrap', // Is se line break nahi hogi
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-        }}>
-            {/* Left Side: Information & Stats */}
-            <Box sx={{ display: 'flex', gap: 3, alignItems: 'center', flexWrap: 'wrap' }}>
-                
-                {/* User Info with fixed widths to prevent overlapping */}
-                <Box sx={{ minWidth: '120px' }}>
-                    <Typography variant="caption" sx={{ color: '#666', display: 'block', fontWeight: 'bold' }}>SALES PERSON</Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 700 }}>{reportData.meta.sales_person}</Typography>
-                </Box>
+            {/* --- Output Section Header --- */}
+            {reportData && (
+                <TableContainer component={Paper} variant="outlined">
+                    <Box sx={{
+                        p: 2,
+                        bgcolor: '#ffffff',
+                        borderBottom: '2px solid #2e7d32',
+                        display: 'flex',
+                        flexWrap: 'nowrap', // Is se line break nahi hogi
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+                    }}>
+                        {/* Left Side: Information & Stats */}
+                        <Box sx={{ display: 'flex', gap: 3, alignItems: 'center', flexWrap: 'wrap' }}>
 
-                <Box sx={{ minWidth: '130px' }}>
-                    <Typography variant="caption" sx={{ color: '#666', display: 'block', fontWeight: 'bold' }}>DESIGNATION</Typography>
-                    <Typography variant="body2">{reportData.meta.designation || 'N/A'}</Typography>
-                </Box>
+                            {/* User Info with fixed widths to prevent overlapping */}
+                            <Box sx={{ minWidth: '120px' }}>
+                                <Typography variant="caption" sx={{ color: '#666', display: 'block', fontWeight: 'bold' }}>SALES PERSON</Typography>
+                                <Typography variant="body2" sx={{ fontWeight: 700 }}>{reportData.meta.sales_person}</Typography>
+                            </Box>
 
-                <Box sx={{ minWidth: '100px' }}>
-                    <Typography variant="caption" sx={{ color: '#666', display: 'block', fontWeight: 'bold' }}>Region</Typography>
-                    <Typography variant="body2">{reportData.meta.region || 'N/A'}</Typography>
-                </Box>
+                            <Box sx={{ minWidth: '130px' }}>
+                                <Typography variant="caption" sx={{ color: '#666', display: 'block', fontWeight: 'bold' }}>DESIGNATION</Typography>
+                                <Typography variant="body2">{reportData.meta.designation || 'N/A'}</Typography>
+                            </Box>
 
-                {/* Vertical Separator */}
-                <Divider orientation="vertical" flexItem sx={{ mx: 1, height: '30px', alignSelf: 'center' }} />
+                            <Box sx={{ minWidth: '100px' }}>
+                                <Typography variant="caption" sx={{ color: '#666', display: 'block', fontWeight: 'bold' }}>Region</Typography>
+                                <Typography variant="body2">{reportData.meta.region || 'N/A'}</Typography>
+                            </Box>
 
-                {/* Counts - Wahi purana style Pill wala */}
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                    <Box sx={{ bgcolor: '#e8f5e9', px: 1.5, py: 0.5, borderRadius: '20px', border: '1px solid #c8e6c9' }}>
-                        <Typography variant="caption" sx={{ color: '#2e7d32', fontWeight: 'bold' }}>Total: {reportData.meta.total_visits}</Typography>
+                            {/* Vertical Separator */}
+                            <Divider orientation="vertical" flexItem sx={{ mx: 1, height: '30px', alignSelf: 'center' }} />
+
+                            {/* Counts - Wahi purana style Pill wala */}
+                            <Box sx={{ display: 'flex', gap: 1 }}>
+                                <Box sx={{ bgcolor: '#e8f5e9', px: 1.5, py: 0.5, borderRadius: '20px', border: '1px solid #c8e6c9' }}>
+                                    <Typography variant="caption" sx={{ color: '#2e7d32', fontWeight: 'bold' }}>Total: {reportData.meta.total_visits}</Typography>
+                                </Box>
+                                <Box sx={{ bgcolor: '#e3f2fd', px: 1.5, py: 0.5, borderRadius: '20px', border: '1px solid #bbdefb' }}>
+                                    <Typography variant="caption" sx={{ color: '#1976d2', fontWeight: 'bold' }}>New: {reportData.meta.new || 0}</Typography>
+                                </Box>
+                                <Box sx={{ bgcolor: '#e3f2fd', px: 1.5, py: 0.5, borderRadius: '20px', border: '1px solid #bbdefb' }}>
+                                    <Typography variant="caption" sx={{ color: '#1976d2', fontWeight: 'bold' }}>Old: {reportData.meta.old || 0}</Typography>
+                                </Box>
+                                <Box sx={{ bgcolor: '#e3f2fd', px: 1.5, py: 0.5, borderRadius: '20px', border: '1px solid #bbdefb' }}>
+                                    <Typography variant="caption" sx={{ color: '#1976d2', fontWeight: 'bold' }}>Mature: {reportData.meta.mature || 0}</Typography>
+                                </Box>
+                            </Box>
+                        </Box>
+
+                        {/* Right Side: Date Range - Locked to Right */}
+                        <Box sx={{ textAlign: 'right', pl: 3, borderLeft: '1px solid #eee' }}>
+                            <Typography variant="caption" sx={{ color: '#666', display: 'block', fontWeight: 'bold' }}>REPORT PERIOD</Typography>
+                            <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#1b5e20', bgcolor: '#f1f8e9', p: '4px 12px', borderRadius: '4px', whiteSpace: 'nowrap' }}>
+                                {formatForDisplay(fromDate)} — {formatForDisplay(toDate)}
+                            </Typography>
+                        </Box>
                     </Box>
-                    <Box sx={{ bgcolor: '#e3f2fd', px: 1.5, py: 0.5, borderRadius: '20px', border: '1px solid #bbdefb' }}>
-                        <Typography variant="caption" sx={{ color: '#1976d2', fontWeight: 'bold' }}>New: {reportData.meta.new || 0}</Typography>
-                    </Box>
-                    <Box sx={{ bgcolor: '#e3f2fd', px: 1.5, py: 0.5, borderRadius: '20px', border: '1px solid #bbdefb' }}>
-                        <Typography variant="caption" sx={{ color: '#1976d2', fontWeight: 'bold' }}>Old: {reportData.meta.old || 0}</Typography>
-                    </Box>
-                    <Box sx={{ bgcolor: '#e3f2fd', px: 1.5, py: 0.5, borderRadius: '20px', border: '1px solid #bbdefb' }}>
-                        <Typography variant="caption" sx={{ color: '#1976d2', fontWeight: 'bold' }}>Mature: {reportData.meta.mature || 0}</Typography>
-                    </Box>
-                </Box>
-            </Box>
-
-            {/* Right Side: Date Range - Locked to Right */}
-            <Box sx={{ textAlign: 'right', pl: 3, borderLeft: '1px solid #eee' }}>
-                <Typography variant="caption" sx={{ color: '#666', display: 'block', fontWeight: 'bold' }}>REPORT PERIOD</Typography>
-                <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#1b5e20', bgcolor: '#f1f8e9', p: '4px 12px', borderRadius: '4px', whiteSpace: 'nowrap' }}>
-                    {formatForDisplay(fromDate)} — {formatForDisplay(toDate)}
-                </Typography>
-            </Box>
-        </Box>
                     <Table size="small" sx={{ borderCollapse: 'collapse' }}>
                         <TableHead sx={{ bgcolor: '#eeeeee' }}>
                             <TableRow>
                                 <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd', width: '120px' }}>Date</TableCell>
                                 {/* Yahan visit hata kar simple Heading likhein */}
                                 <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>Time</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>Type</TableCell>
                                 <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>Customer Name</TableCell>
                                 <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>Tehsil</TableCell>
                                 <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>City</TableCell>
-                                <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>Type</TableCell>
                                 <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>Region</TableCell>
                                 <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>Visit Purpose</TableCell>
                                 <TableCell sx={{
@@ -280,12 +299,12 @@ const Reports = () => {
                                         )}
 
                                         <TableCell sx={{ border: '1px solid #ddd' }}>{visit.visit_time || 'N/A'}</TableCell>
+                                        <TableCell sx={{ border: '1px solid #ddd' }}>{visit.type}</TableCell>
                                         <TableCell sx={{ border: '1px solid #ddd' }}>{visit.customer_name}</TableCell>
                                         <TableCell sx={{ border: '1px solid #ddd' }}>{visit.tehsil}</TableCell>
                                         <TableCell sx={{ border: '1px solid #ddd' }}>{visit.city}</TableCell>
-                                        <TableCell sx={{ border: '1px solid #ddd' }}>{visit.type}</TableCell>
                                         <TableCell sx={{ border: '1px solid #ddd' }}>{visit.region}</TableCell>
-                                        <TableCell sx={{ border: '1px solid #ddd' }}>{visit.visit_purpose}</TableCell>
+                                        <TableCell sx={{ border: '1px solid #ddd' }}>{getVisitPurposeLabel(visit.visit_purpose)}</TableCell>
                                         <TableCell sx={{
                                             border: '1px solid #ddd',
                                             textAlign: 'center',
