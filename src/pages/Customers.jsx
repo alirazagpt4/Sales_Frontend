@@ -92,7 +92,7 @@ const Customers = () => {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [editingCustomer, setEditingCustomer] = useState(null);
-    const initialFormData = { customer_name: '', contact: '', area: '', tehsil: '', cityId: '', bags_potential: 0, type: 'Dealer',district:'' , division:'' , province:'' , region: '', latitude: '', longitude: '' };
+    const initialFormData = { customer_name: '', contact: '', area: '', tehsil: '', cityId: '', bags_potential: 0, type: 'Dealer', district: '', division: '', province: '', region: '', latitude: '', longitude: '' };
     const [formData, setFormData] = useState(initialFormData);
     const [cities, setCities] = useState([]);
 
@@ -339,118 +339,96 @@ const Customers = () => {
             {error && <Alert severity="error" sx={{ mt: 2, mb: 2 }}>{error}</Alert>}
 
             {/* --- Customer Table --- */}
+            {/* --- Customer Table --- */}
             <TableContainer component={Paper} elevation={3} sx={{ borderRadius: '8px', overflow: 'hidden' }}>
-                <Table size="small" sx={{ minWidth: 800 }} aria-label="customer table">
-
-                    {/* Header styling: Professional Dark Green look */}
+                <Table
+                    size="small"
+                    sx={{
+                        minWidth: 800,
+                        tableLayout: 'fixed', // 👈 Yeh sab se zaroori hai columns ko control karne ke liye
+                        width: '100%'
+                    }}
+                >
                     <TableHead sx={{ backgroundColor: '#f5f5f5' }}>
                         <TableRow>
-                            {HEADERS.map(header => (
-                                <TableCell
-                                    key={header.label}
-                                    align={header.align}
-                                    sx={{
-
-                                        fontWeight: 'bold',
-                                        fontSize: '0.75rem', // Thora bara header
-                                        whiteSpace: 'nowrap',
-                                        py: 1.2
-                                    }}
-                                >
-                                    {header.label}
-                                </TableCell>
-                            ))}
+                            {/* Headers with specific widths */}
+                            <TableCell sx={{ width: '40px', fontWeight: 'bold', fontSize: '0.70rem' }}>ID</TableCell>
+                            <TableCell sx={{ width: '60px', fontWeight: 'bold', fontSize: '0.70rem' }}>Type</TableCell>
+                            <TableCell sx={{ width: '130px', fontWeight: 'bold', fontSize: '0.70rem' }}>Customer Name</TableCell>
+                            <TableCell sx={{ width: '100px', fontWeight: 'bold', fontSize: '0.70rem' }}>Contact</TableCell>
+                            <TableCell sx={{ width: '80px', fontWeight: 'bold', fontSize: '0.70rem' }}>Tehsil</TableCell>
+                            <TableCell sx={{ width: '80px', fontWeight: 'bold', fontSize: '0.70rem' }}>City</TableCell>
+                            <TableCell sx={{ width: '70px', fontWeight: 'bold', fontSize: '0.70rem' }}>Region</TableCell>
+                            <TableCell sx={{ width: '50px', fontWeight: 'bold', fontSize: '0.70rem' }} align="center">Location</TableCell>
+                            <TableCell sx={{ width: '80px', fontWeight: 'bold', fontSize: '0.70rem' }} align="center">Bags Potential</TableCell>
+                            <TableCell sx={{ width: '90px', fontWeight: 'bold', fontSize: '0.70rem' }}>CreatedBy</TableCell>
+                            <TableCell sx={{ width: '110px', fontWeight: 'bold', fontSize: '0.70rem' }} align="center">Actions</TableCell>
                         </TableRow>
                     </TableHead>
 
                     <TableBody>
                         {customers.map((customer) => (
-                            <TableRow
-                                key={customer.id}
-                                hover
-                                sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-                            >
-                                {/* Data Cells: Chota font size taake spacing behtar ho */}
-                                <TableCell sx={{ fontSize: '0.70rem', py: 0.8 }}>{customer.id}</TableCell>
-                                <TableCell sx={{ fontSize: '0.70rem', textTransform: 'capitalize' }}>{customer.type}</TableCell>
+                            <TableRow key={customer.id} hover>
+                                <TableCell sx={{ fontSize: '0.65rem' }}>{customer.id}</TableCell>
+                                <TableCell sx={{ fontSize: '0.65rem' }}>{customer.type}</TableCell>
+
+                                {/* Name Wrap logic */}
                                 <TableCell sx={{
                                     fontSize: '0.70rem',
-                                    fontWeight: 500,
-                                    minWidth: 140,
-                                    whiteSpace: 'nowrap'
+                                    fontWeight: 600,
+                                    whiteSpace: 'normal', // 👈 Text ko agli line pe bheje ga
+                                    wordBreak: 'break-word',
+                                    lineHeight: 1.2
                                 }}>
                                     {customer.customer_name}
                                 </TableCell>
-                                <TableCell sx={{ fontSize: '0.70rem' }}>{customer.contact}</TableCell>
 
-                                <TableCell sx={{ fontSize: '0.70rem' }}>{customer.tehsil}</TableCell>
-                                <TableCell sx={{ fontSize: '0.70rem' }}>{customer.cityName}</TableCell>
-                                <TableCell sx={{
-                                    fontSize: '0.75rem',
-                                    fontWeight: 700, // Bold numbers
-                                    pr: 2, // Right padding
-                                    width: 70,
-                                    py: 0.5
-                                }} >{customer.region || 'N/A'}</TableCell>
-                                <TableCell sx={{ fontSize: '0.65rem' }} align="center">
-                                    <Tooltip title="View on Google Maps">
-                                        <IconButton
-                                            color="secondary"
-                                            size="small"
-                                            onClick={() => openGoogleMaps(customer.latitude, customer.longitude)}
-                                            disabled={!customer.latitude || !customer.longitude}
-                                        >
-                                            <LocationOnIcon fontSize="small" sx={{ color: '#db4437' }} /> {/* Red color for Map Pin */}
-                                        </IconButton>
-                                    </Tooltip>
+                                <TableCell sx={{ fontSize: '0.65rem' }}>{customer.contact}</TableCell>
+                                <TableCell sx={{ fontSize: '0.65rem', whiteSpace: 'normal' }}>{customer.tehsil}</TableCell>
+                                <TableCell sx={{ fontSize: '0.65rem', whiteSpace: 'normal' }}>{customer.cityName}</TableCell>
+                                <TableCell sx={{ fontSize: '0.65rem' }}>{customer.region || 'N/A'}</TableCell>
+
+                                <TableCell align="center">
+                                    <IconButton
+                                        size="small"
+                                        onClick={() => openGoogleMaps(customer.latitude, customer.longitude)}
+                                        disabled={!customer.latitude || !customer.longitude}
+                                        sx={{ p: 0 }}
+                                    >
+                                        <LocationOnIcon sx={{ fontSize: '1.2rem', color: '#db4437' }} />
+                                    </IconButton>
                                 </TableCell>
+
                                 <TableCell align="center" sx={{ fontSize: '0.70rem', fontWeight: 'bold' }}>
                                     {customer.bags_potential || 0}
                                 </TableCell>
-                                <TableCell align="center" sx={{ fontSize: '0.70rem', fontWeight: 'bold' }}>
-                                    {customer.createdBy || 0}
+
+                                <TableCell sx={{ fontSize: '0.65rem', whiteSpace: 'normal' }}>
+                                    {customer.createdBy || 'N/A'}
                                 </TableCell>
 
-                                {/* Compact Actions Column */}
-                                <TableCell align="center" sx={{ whiteSpace: 'nowrap' }}>
-                                    <Button
-                                        size="small"
-                                        color="primary"
-                                        onClick={() => handleOpenEditModal(customer)}
-                                        sx={{ minWidth: 0, p: 0.5, mr: 1 }}
-                                    >
-                                        <EditIcon fontSize="small" />
-                                    </Button>
-                                    <Button
-                                        size="small"
-                                        color="error"
-                                        onClick={() => handleDeleteCustomer(customer.id)}
-                                        sx={{ minWidth: 0, p: 0.5 }}
-                                    >
-                                        <DeleteIcon fontSize="small" />
-                                    </Button>
-                                    <Button
-                                        size="small"
-                                        color="info"
-                                        onClick={() => handleOpenViewModal(customer)} // customer aapka map ka variable hoga
-                                        sx={{ minWidth: 0, p: 0.5 }}
-                                    >
-                                        <VisibilityIcon fontSize="small" />
-                                    </Button>
+                                {/* Actions Column - No wrap here to keep icons together */}
+                                <TableCell align="center">
+                                    <Box sx={{ display: 'flex', justifyContent: 'center', gap: 0.5 }}>
+                                        <Tooltip title="Edit">
+                                            <IconButton size="small" color="primary" onClick={() => handleOpenEditModal(customer)} sx={{ p: 0.5 }}>
+                                                <EditIcon fontSize="inherit" />
+                                            </IconButton>
+                                        </Tooltip>
+                                        <Tooltip title="Delete">
+                                            <IconButton size="small" color="error" onClick={() => handleDeleteCustomer(customer.id)} sx={{ p: 0.5 }}>
+                                                <DeleteIcon fontSize="inherit" />
+                                            </IconButton>
+                                        </Tooltip>
+                                        <Tooltip title="View">
+                                            <IconButton size="small" color="info" onClick={() => handleOpenViewModal(customer)} sx={{ p: 0.5 }}>
+                                                <VisibilityIcon fontSize="inherit" />
+                                            </IconButton>
+                                        </Tooltip>
+                                    </Box>
                                 </TableCell>
                             </TableRow>
                         ))}
-
-                        {/* No Results Row */}
-                        {customers.length === 0 && !loading && (
-                            <TableRow key="no-results-row">
-                                <TableCell colSpan={HEADERS.length} align="center" sx={{ py: 3 }}>
-                                    <Typography variant="subtitle2" color="textSecondary">
-                                        {searchTerm ? `No customers found matching "${searchTerm}"` : "No customers created yet."}
-                                    </Typography>
-                                </TableCell>
-                            </TableRow>
-                        )}
                     </TableBody>
                 </Table>
             </TableContainer>
