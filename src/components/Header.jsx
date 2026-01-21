@@ -26,7 +26,7 @@ const Header = ({ drawerWidth }) => {
     const open = Boolean(anchorEl);
 
     // Context se username fetch kiya
-    const userName = user || "Admin User";
+    const userName = user.fullname || "Admin User";
     
     // --- Handlers for Dropdown Menu ---
     const handleMenu = (event) => {

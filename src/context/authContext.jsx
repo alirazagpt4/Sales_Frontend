@@ -16,9 +16,7 @@ export const useAuth = () => {
 
     //  State to hold authentication status
     const [token, setToken] = useState(null); 
-    const [user, setUser] = useState(
-         localStorage.getItem('username') || null 
-    );
+    const [user, setUser] = useState(null);
      
     console.log("user in auth context ...." , user)
     const [loading, setLoading] = useState(true);
@@ -30,13 +28,19 @@ export const useAuth = () => {
         
        // Sirf LocalStorage se token check karein
         const storedToken = localStorage.getItem('token');
-        const storedUsername = localStorage.getItem('username')
+        const storedUsername = localStorage.getItem('username');
+        const storedFullname = localStorage.getItem('fullname');
+
         
         
         if (storedToken) {
             setToken(storedToken);
             if (storedUsername) {
-                setUser(storedUsername); 
+                // 2. State mein dono cheezein set karein
+                setUser({ 
+                    username: storedUsername, 
+                    fullname: storedFullname 
+                });
             }
            
         }
@@ -46,14 +50,15 @@ export const useAuth = () => {
 ``
 
     // Login function
-    const login = (receivedToken , username) => { 
+    const login = (receivedToken , username , fullname) => { 
     localStorage.setItem('token', receivedToken); // Seedha local storage mein set kiya
     localStorage.setItem('username' , username);
+    localStorage.setItem('fullname', fullname);
 
-    console.log("user ... login auth , ..." , username);
+    console.log("user ... login auth , ..." , username , fullname);
 
     setToken(receivedToken); // Sahi value state mein set ki
-    setUser(username);
+    setUser({ username, fullname });
    
 }
 
@@ -62,6 +67,7 @@ export const useAuth = () => {
     const logout = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('username')
+        localStorage.removeItem('fullname');
        // User details bhi remove karein
         setToken(null);
         setUser(null)
