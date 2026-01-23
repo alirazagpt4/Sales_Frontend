@@ -8,6 +8,8 @@ import BarChartIcon from '@mui/icons-material/BarChart';
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import CircleIcon from '@mui/icons-material/Circle'; // Sub-menu ke liye chota icon
+import EventNoteIcon from '@mui/icons-material/EventNote'; // Daily Visit ke liye perfect hai
+import SummarizeIcon from '@mui/icons-material/Summarize'; // Summary ke liye professional hai
 
 const Sidebar = ({ drawerWidth }) => {
   const navigate = useNavigate();
@@ -79,24 +81,24 @@ const Sidebar = ({ drawerWidth }) => {
             
             {/* DVR Report */}
             <ListItemButton 
-              sx={{ pl: 4 }} 
+              sx={{ pl: 3.5 }} 
               onClick={() => navigate('/reports')} 
               selected={location.pathname === '/reports'}
             >
               <ListItemIcon>
-                <CircleIcon sx={{ fontSize: '8px' }} /> {/* Chota dot icon */}
+                <EventNoteIcon /> {/* Chota dot icon */}
               </ListItemIcon>
               <ListItemText primary="DVR Report" />
             </ListItemButton>
 
             {/* Summary Report */}
             <ListItemButton 
-              sx={{ pl: 4 }} 
+              sx={{ pl: 3.5 }} 
               onClick={() => navigate('/summary-reports')} 
               selected={location.pathname === '/summary-reports'}
             >
               <ListItemIcon>
-                <CircleIcon sx={{ fontSize: '8px' }} />
+                <SummarizeIcon  />
               </ListItemIcon>
               <ListItemText primary="Summary Report" />
             </ListItemButton>
