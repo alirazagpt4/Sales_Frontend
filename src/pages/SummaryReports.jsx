@@ -150,7 +150,7 @@ const SummaryReports = () => {
                                     ))}
                                     {/* Daily Sub-Total Row */}
                                     <TableRow sx={{ bgcolor: '#f9f9f9' }}>
-                                        <TableCell sx={{ border: '1px solid #ddd', fontWeight: 'bold', color: '#2e7d32' }}>Daily Total:</TableCell>
+                                        <TableCell sx={{ border: '1px solid #ddd', fontWeight: 'bold', color: '#2e7d32' }}>Total Sales Person : {day.data.length}</TableCell>
                                         <TableCell align="center" sx={{ border: '1px solid #ddd', fontWeight: 'bold' }}>{day.date_summary.total_visits}</TableCell>
                                         <TableCell align="center" sx={{ border: '1px solid #ddd', fontWeight: 'bold' }}>{day.date_summary.regular}</TableCell>
                                         <TableCell align="center" sx={{ border: '1px solid #ddd', fontWeight: 'bold' }}>{day.date_summary.followup}</TableCell>
