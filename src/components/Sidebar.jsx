@@ -7,9 +7,9 @@ import GroupIcon from '@mui/icons-material/Group';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
-import CircleIcon from '@mui/icons-material/Circle'; // Sub-menu ke liye chota icon
-import EventNoteIcon from '@mui/icons-material/EventNote'; // Daily Visit ke liye perfect hai
-import SummarizeIcon from '@mui/icons-material/Summarize'; // Summary ke liye professional hai
+// import CircleIcon from '@mui/icons-material/Circle'; // Sub-menu ke liye chota icon
+// import EventNoteIcon from '@mui/icons-material/EventNote'; // Daily Visit ke liye perfect hai
+// import SummarizeIcon from '@mui/icons-material/Summarize'; // Summary ke liye professional hai
 
 const Sidebar = ({ drawerWidth }) => {
   const navigate = useNavigate();
@@ -85,10 +85,8 @@ const Sidebar = ({ drawerWidth }) => {
               onClick={() => navigate('/reports')} 
               selected={location.pathname === '/reports'}
             >
-              <ListItemIcon>
-                <EventNoteIcon /> {/* Chota dot icon */}
-              </ListItemIcon>
-              <ListItemText primary="DVR Report" />
+              
+              <ListItemText primary="Daily Visit Report" />
             </ListItemButton>
 
             {/* Summary Report */}
@@ -97,10 +95,8 @@ const Sidebar = ({ drawerWidth }) => {
               onClick={() => navigate('/summary-reports')} 
               selected={location.pathname === '/summary-reports'}
             >
-              <ListItemIcon>
-                <SummarizeIcon  />
-              </ListItemIcon>
-              <ListItemText primary="Summary Report" />
+              
+              <ListItemText primary="Summary Visit Report" />
             </ListItemButton>
 
           </List>
