@@ -36,10 +36,10 @@ const Login = () => {
       console.log("Login response ..." , response.data);
       
       // Assuming backend se { token: "...", userDetails: { name: "..." } } mil raha hai
-      const { token: receivedToken , username:username , fullname:fullname } = response.data; 
+      const { token: receivedToken , username:username , fullname:fullname  , userRole:userRole} = response.data; 
 
       // 2. ✅ Auth Context Update (Token aur User details save honge)
-      login(receivedToken , username, fullname);
+      login(receivedToken , username, fullname, userRole);
       
       // 3. Redirect to Dashboard
       navigate('/'); 

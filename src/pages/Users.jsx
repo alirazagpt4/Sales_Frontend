@@ -59,20 +59,20 @@ const initialFormData = {
 
 
 // Available roles: sirf Admin aur User
-const AVAILABLE_ROLES = ['admin', 'user'];
+const AVAILABLE_ROLES = ['admin', 'user', 'superadmin'];
 
 // ✅ Regions ki list define ki
 const REGIONS = [
-  'Gojra', 
-  'Sargodha', 
-  'Jhang', 
-  'South', 
-  'Rahim Yar Khan', 
-  'Layyah', 
-  'Sahiwal', 
-  'Narowal', 
-  'Pindi Bhattian', 
-  'Gujranwala'
+    'Gojra',
+    'Sargodha',
+    'Jhang',
+    'South',
+    'Rahim Yar Khan',
+    'Layyah',
+    'Sahiwal',
+    'Narowal',
+    'Pindi Bhattian',
+    'Gujranwala'
 ];
 
 
@@ -80,6 +80,7 @@ const Users = () => {
     const { logout, user } = useAuth();
     console.log("user .... in customers", user);
 
+    const isSuperAdmin = user?.role?.toLowerCase() === 'superadmin';
     // --- State Management ---
     const [originalUsers, setOriginalUsers] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -155,14 +156,14 @@ const Users = () => {
         fetchUsers();
         fetchCities();
         // 30 Seconds ka Interval setup karne ke liye
-    const interval = setInterval(() => {
-        console.log("Auto-refreshing user list...");
-        fetchUsers();
-    }, 10000); // 30000ms = 30 seconds
+        const interval = setInterval(() => {
+            console.log("Auto-refreshing user list...");
+            fetchUsers();
+        }, 10000); // 30000ms = 30 seconds
 
-    // Component unmount hote waqt interval ko clear karna zaroori hai
-    // warna memory leak ho sakti hai
-    return () => clearInterval(interval);
+        // Component unmount hote waqt interval ko clear karna zaroori hai
+        // warna memory leak ho sakti hai
+        return () => clearInterval(interval);
     }, [fetchUsers]);
     // ...
 
@@ -223,6 +224,8 @@ const Users = () => {
     };
 
     const handleOpenEditModal = (user) => {
+
+       
         setEditingUser(user);
         setFormData({
             name: user.name,
@@ -265,12 +268,12 @@ const Users = () => {
         if (isEditMode && !formData.password) {
             const { password, ...rest } = formData;
             payload = rest;
-            console.log("..... payload = rest " , rest);
+            console.log("..... payload = rest ", rest);
 
         }
 
         // Validation check
-        if (!payload.name   || (!isEditMode && !payload.password)) {
+        if (!payload.name || (!isEditMode && !payload.password)) {
             setError("Please fill all required fields.");
             return;
         }
@@ -353,6 +356,11 @@ const Users = () => {
             {/* --- User Table --- */}
             {/* --- User Table --- */}
             <TableContainer component={Paper} elevation={3} sx={{ borderRadius: '8px', overflow: 'hidden' }}>
+                
+                {/* <Typography variant="h6">
+                    My Role: {user?.role} | Am I SuperAdmin? {user?.role === 'superadmin' ? 'YES' : 'NO'}
+                </Typography> */}
+
                 <Table size="small" sx={{ minWidth: 800 }} aria-label="user table">
 
                     {/* Header styling: Background dark green aur font bold */}
@@ -365,7 +373,7 @@ const Users = () => {
                                     sx={{
 
                                         fontWeight: 'bold',
-                                        fontSize: '0.75rem', // Header thora bara
+                                        fontSize: '0.70rem', // Header thora bara
                                         py: 1.5
                                     }}
                                 >
@@ -376,18 +384,18 @@ const Users = () => {
                     </TableHead>
 
                     <TableBody>
-                        {filteredUsers.map((user , index) => (
+                        {filteredUsers.map((user, index) => (
                             <TableRow
                                 key={user.id}
                                 hover
                                 sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                             >
                                 {/* Table Cells: Font size chota kiya gaya hai (0.8rem) */}
-                                <TableCell sx={{ fontSize: '0.70rem', py: 1 }}>{index + 1}</TableCell>
-                                <TableCell sx={{ fontSize: '0.70rem', fontWeight: 500 }}>{user.name}</TableCell>
+                                <TableCell sx={{ fontSize: '0.65rem', py: 1 }}>{index + 1}</TableCell>
+                                <TableCell sx={{ fontSize: '0.65rem', fontWeight: 500 }}>{user.name}</TableCell>
 
                                 <TableCell sx={{
-                                    fontSize: '0.70rem',
+                                    fontSize: '0.65rem',
                                     minWidth: 130, // 150 se kam karkay 130 kiya
                                     whiteSpace: 'nowrap'
                                 }}>
@@ -395,20 +403,20 @@ const Users = () => {
                                 </TableCell>
 
                                 <TableCell sx={{
-                                    fontSize: '0.70rem',
+                                    fontSize: '0.65rem',
                                     minWidth: 110,
                                     whiteSpace: 'nowrap'
                                 }}>
                                     {user.designation || 'N/A'}
                                 </TableCell>
 
-                                <TableCell sx={{ fontSize: '0.70rem' }}>{user.mobile_ph || 'N/A'}</TableCell>
-                                <TableCell sx={{ fontSize: '0.70rem' }}>{user.whatsapp_ph || 'N/A'}</TableCell>
-                                <TableCell sx={{ fontSize: '0.70rem', textTransform: 'capitalize' }}>{user.role || 'N/A'}</TableCell>
-                                <TableCell sx={{ fontSize: '0.70rem' }}>{user.cityDetails?.name || 'N/A'}</TableCell>
+                                <TableCell sx={{ fontSize: '0.65rem' }}>{user.mobile_ph || 'N/A'}</TableCell>
+                                <TableCell sx={{ fontSize: '0.65rem' }}>{user.whatsapp_ph || 'N/A'}</TableCell>
+                                <TableCell sx={{ fontSize: '0.57rem', textTransform: 'capitalize' }}>{user.role || 'N/A'}</TableCell>
+                                <TableCell sx={{ fontSize: '0.65rem' }}>{user.cityDetails?.name || 'N/A'}</TableCell>
 
                                 <TableCell sx={{
-                                    fontSize: '0.70rem',
+                                    fontSize: '0.65rem',
                                     minWidth: 120,
                                     whiteSpace: 'nowrap'
                                 }}>
@@ -417,14 +425,16 @@ const Users = () => {
 
                                 {/* Actions Column: Buttons ko mazeed compact kiya gaya hai */}
                                 <TableCell align="center" sx={{ whiteSpace: 'nowrap' }}>
-                                    <Button
-                                        size="small"
-                                        color="primary"
-                                        onClick={() => handleOpenEditModal(user)}
-                                        sx={{ minWidth: 0, p: 0.5, mr: 1 }}
-                                    >
-                                        <EditIcon fontSize="small" />
-                                    </Button>
+                                    {isSuperAdmin && (
+                                        <Button
+                                            size="small"
+                                            onClick={() => handleOpenEditModal(user)}
+                                            sx={{ minWidth: 0, p: 0.5, mr: 1 }}
+                                        >
+                                            <EditIcon fontSize="small" color="primary" />
+                                        </Button>
+                                    )}
+
                                     <Button
                                         size="small"
                                         color="info"
@@ -474,7 +484,7 @@ const Users = () => {
                                 fullWidth margin="normal" required
                             />
 
-                              <TextField
+                            <TextField
                                 label="Designation"
                                 name="designation"
                                 value={formData.designation}
@@ -489,8 +499,8 @@ const Users = () => {
                                 onChange={handleFormChange}
                                 fullWidth margin="normal" required
                             />
-                            
-                           
+
+
 
                             <TextField
                                 label="Mobile Phone"
@@ -529,24 +539,24 @@ const Users = () => {
                                 </Select>
                             </FormControl>
 
-                                {/* ✅ Region Select (Replaced Referred To) */}
-                        <FormControl fullWidth margin="normal" required>
-                            <InputLabel id="region-select-label">Region</InputLabel>
-                            <Select
-                                labelId="region-select-label"
-                                label="Region"
-                                name="region"
-                                value={formData.region}
-                                onChange={handleFormChange}
-                            >
-                                <MenuItem value=""><em>Select Region</em></MenuItem>
-                                {REGIONS.map((reg) => (
-                                    <MenuItem key={reg} value={reg}>
-                                        {reg}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
+                            {/* ✅ Region Select (Replaced Referred To) */}
+                            <FormControl fullWidth margin="normal" required>
+                                <InputLabel id="region-select-label">Region</InputLabel>
+                                <Select
+                                    labelId="region-select-label"
+                                    label="Region"
+                                    name="region"
+                                    value={formData.region}
+                                    onChange={handleFormChange}
+                                >
+                                    <MenuItem value=""><em>Select Region</em></MenuItem>
+                                    {REGIONS.map((reg) => (
+                                        <MenuItem key={reg} value={reg}>
+                                            {reg}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
 
                             {/* 🚨 Role Select Field Added Back */}
                             <FormControl fullWidth margin="normal" required>
@@ -576,8 +586,8 @@ const Users = () => {
                             />
 
 
-                            
-                          
+
+
 
                             {/* Referred To Dropdown
                             <FormControl fullWidth margin="normal">
@@ -592,18 +602,18 @@ const Users = () => {
                                     <MenuItem value=""><em>None</em></MenuItem>
 
                                     {/* 1. Agar koi purani value hai jo list mein nahi mil rahi, usay yahan add karein */}
-                                    {/* {formData.referred_to && !originalUsers.find(u => u.name === formData.referred_to) && (
+                            {/* {formData.referred_to && !originalUsers.find(u => u.name === formData.referred_to) && (
                                         <MenuItem value={formData.referred_to}>{formData.referred_to}</MenuItem>
                                     )}
                                     {/* originalUsers array se names nikaal kar dropdown banaya */}
-                                    {/* {originalUsers.map((u) => (
+                            {/* {originalUsers.map((u) => (
                                         <MenuItem key={u.id} value={u.name}>
                                             {u.name}
                                         </MenuItem>
                                     ))}
                                 </Select>
-                            </FormControl> */} 
-                        
+                            </FormControl> */}
+
 
                         </DialogContent>
                     </div>
@@ -633,7 +643,7 @@ const Users = () => {
                                 { label: "Designation", value: viewingUser.designation },
                                 { label: "Mobile", value: viewingUser.mobile_ph },
                                 { label: "WhatsApp", value: viewingUser.whatsapp_ph },
-                                
+
                                 { label: "City", value: viewingUser.cityDetails?.name },
                             ].map((item, index) => (
                                 <Grid container key={index} sx={{ mb: 1.5 }}>

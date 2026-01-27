@@ -30,6 +30,8 @@ export const useAuth = () => {
         const storedToken = localStorage.getItem('token');
         const storedUsername = localStorage.getItem('username');
         const storedFullname = localStorage.getItem('fullname');
+        const storedRole = localStorage.getItem('role'); 
+
 
         
         
@@ -39,7 +41,8 @@ export const useAuth = () => {
                 // 2. State mein dono cheezein set karein
                 setUser({ 
                     username: storedUsername, 
-                    fullname: storedFullname 
+                    fullname: storedFullname ,
+                    role: storedRole
                 });
             }
            
@@ -50,15 +53,15 @@ export const useAuth = () => {
 ``
 
     // Login function
-    const login = (receivedToken , username , fullname) => { 
+    const login = (receivedToken , username , fullname ,  role) => { 
     localStorage.setItem('token', receivedToken); // Seedha local storage mein set kiya
     localStorage.setItem('username' , username);
     localStorage.setItem('fullname', fullname);
-
+    localStorage.setItem('role', role);
     console.log("user ... login auth , ..." , username , fullname);
 
     setToken(receivedToken); // Sahi value state mein set ki
-    setUser({ username, fullname });
+    setUser({ username, fullname, role });
    
 }
 
@@ -68,6 +71,7 @@ export const useAuth = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('username')
         localStorage.removeItem('fullname');
+        localStorage.removeItem('role');
        // User details bhi remove karein
         setToken(null);
         setUser(null)

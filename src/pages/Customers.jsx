@@ -67,6 +67,8 @@ const REGIONS = ['Region 1', 'Region 2', 'Region 3', 'Region 4', 'Region 5'];
 const Customers = () => {
     const { logout, user } = useAuth();
 
+    const isSuperAdmin = user?.role?.toLowerCase() === 'superadmin';
+
     const openGoogleMaps = (lat, lng) => {
         if (!lat || !lng) {
             alert("Location coordinates not available for this customer.");
@@ -190,6 +192,7 @@ const Customers = () => {
     }
 
     const handleOpenEditModal = (customer) => {
+       
         setEditingCustomer(customer);
         setFormData({
             customer_name: customer.customer_name, contact: customer.contact,
@@ -274,6 +277,7 @@ const Customers = () => {
 
     // 🚀 FIX: Handle Delete Customer - Ensure data refresh
     const handleDeleteCustomer = async (customerId) => {
+        
         if (!window.confirm(`Are you sure you want to delete customer ID ${customerId}?`)) {
             return;
         }
@@ -410,16 +414,17 @@ const Customers = () => {
                                 {/* Actions Column - No wrap here to keep icons together */}
                                 <TableCell align="center">
                                     <Box sx={{ display: 'flex', justifyContent: 'center', gap: 0.5 }}>
-                                        <Tooltip title="Edit">
+                                        {isSuperAdmin && <Tooltip title="Edit">
                                             <IconButton size="small" color="primary" onClick={() => handleOpenEditModal(customer)} sx={{ p: 0.5 }}>
                                                 <EditIcon fontSize="inherit" />
                                             </IconButton>
-                                        </Tooltip>
-                                        <Tooltip title="Delete">
+                                        </Tooltip>}
+
+                                        {isSuperAdmin && <Tooltip title="Delete">
                                             <IconButton size="small" color="error" onClick={() => handleDeleteCustomer(customer.id)} sx={{ p: 0.5 }}>
                                                 <DeleteIcon fontSize="inherit" />
                                             </IconButton>
-                                        </Tooltip>
+                                        </Tooltip>}
                                         <Tooltip title="View">
                                             <IconButton size="small" color="info" onClick={() => handleOpenViewModal(customer)} sx={{ p: 0.5 }}>
                                                 <VisibilityIcon fontSize="inherit" />
