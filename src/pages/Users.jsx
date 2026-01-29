@@ -105,7 +105,7 @@ const Users = () => {
     // ✅ NEW: Pagination States
     const [page, setPage] = useState(1); // Current page (MUI default 1-based)
     const [totalPages, setTotalPages] = useState(1);
-    const USERS_PER_PAGE = 5; // Const for page size
+    const USERS_PER_PAGE = 10; // Const for page size
 
 
     // Modal and Form States
@@ -134,7 +134,7 @@ const Users = () => {
         setError(null);
         try {
             // API call mein pagination parameters bheje
-            const response = await API.get(`/users`);
+            const response = await API.get(`/users?page=${page}&limit=${USERS_PER_PAGE}`);
             console.log("USERSSSSS ......", response.data);
 
             // ✅ API Response Parsing Update
@@ -391,7 +391,7 @@ const Users = () => {
                                 sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                             >
                                 {/* Table Cells: Font size chota kiya gaya hai (0.8rem) */}
-                                <TableCell sx={{ fontSize: '0.65rem', py: 1 }}>{index + 1}</TableCell>
+                                <TableCell sx={{ fontSize: '0.65rem', py: 1 }}>{(page - 1) * USERS_PER_PAGE + index + 1}</TableCell>
                                 <TableCell sx={{ fontSize: '0.65rem', fontWeight: 500 }}>{user.name}</TableCell>
 
                                 <TableCell sx={{
@@ -450,7 +450,7 @@ const Users = () => {
                 </Table>
             </TableContainer>
 
-            {/* {totalPages > 1 && (
+            {totalPages > 1 && (
                 <Box display="flex" justifyContent="center" mt={3} pb={2}>
                     <Pagination
                         count={totalPages}
@@ -462,7 +462,7 @@ const Users = () => {
                         showLastButton
                     />
                 </Box>
-            )} */}
+            )}
 
             {/* --- MODAL FOR ADD/EDIT (Role Select added) --- */}
             <Dialog open={isModalOpen} onClose={handleCloseModal} maxWidth="sm" fullWidth>
