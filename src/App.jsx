@@ -14,6 +14,7 @@ import Customers from './pages/Customers';
 import Users from './pages/Users';
 import Reports from './pages/Reports';
 import SummaryReports from './pages/SummaryReports';
+import Items from './pages/Items';
 
 function App() {
   // useAuth Hook se values lein. Aapke AuthProvider mein loading state hai.
@@ -52,6 +53,7 @@ function App() {
             <Route path="users" element={<Users />} />
             <Route path="reports" element={<Reports />} />
             <Route path="summary-reports" element={<SummaryReports />} />
+            <Route path="items" element={<Items />} />
           </Route>
         ) : (
           // Agar user logged in nahi hai aur kisi protected route par jane ki koshish kare, toh Login par redirect kar do

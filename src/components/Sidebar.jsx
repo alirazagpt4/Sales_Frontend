@@ -7,6 +7,7 @@ import GroupIcon from '@mui/icons-material/Group';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
+import InventoryIcon from '@mui/icons-material/Inventory';
 // import CircleIcon from '@mui/icons-material/Circle'; // Sub-menu ke liye chota icon
 // import EventNoteIcon from '@mui/icons-material/EventNote'; // Daily Visit ke liye perfect hai
 // import SummarizeIcon from '@mui/icons-material/Summarize'; // Summary ke liye professional hai
@@ -61,6 +62,11 @@ const Sidebar = ({ drawerWidth }) => {
         <ListItemButton onClick={() => navigate('/users')} selected={location.pathname === '/users'}>
           <ListItemIcon><PeopleIcon /></ListItemIcon>
           <ListItemText primary="Users" />
+        </ListItemButton>
+        {/* Items */}
+        <ListItemButton onClick={() => navigate('/items')} selected={location.pathname === '/items'}>
+          <ListItemIcon><InventoryIcon /></ListItemIcon>
+          <ListItemText primary="Items" />
         </ListItemButton>
 
         
