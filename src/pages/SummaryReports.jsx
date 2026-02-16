@@ -1,3 +1,4 @@
+import XLSX from 'xlsx-js-style';
 import React, { useState } from 'react';
 import {
     Typography, Box, TextField, Button, Grid, Paper,
@@ -5,6 +6,7 @@ import {
     CircularProgress, Alert, Divider
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
+import DownloadIcon from '@mui/icons-material/Download';
 import API from '../api/axiosClient.jsx';
 
 // UI ke liye Date format: Dec 16, 2025
@@ -20,6 +22,81 @@ const SummaryReports = () => {
     const [reportData, setReportData] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+
+    const exportSummaryToExcel = () => {
+        if (!reportData || !reportData.report) return;
+
+        const excelData = [];
+        const merges = [];
+        let currentRow = 0;
+
+        // --- Styles ---
+        const headerStyle = {
+            fill: { fgColor: { rgb: "2E7D32" } },
+            font: { color: { rgb: "FFFFFF" }, bold: true, sz: 11 },
+            alignment: { horizontal: "center", vertical: "center" },
+            border: { top: {style: "thin"}, bottom: {style: "thin"}, left: {style: "thin"}, right: {style: "thin"} }
+        };
+
+        const bodyStyle = {
+            alignment: { horizontal: "center", vertical: "center" },
+            border: { top: {style: "thin", color: {rgb: "DDDDDD"}}, bottom: {style: "thin", color: {rgb: "DDDDDD"}} }
+        };
+
+        const subTotalStyle = {
+            fill: { fgColor: { rgb: "F1F8E9" } },
+            font: { bold: true, color: { rgb: "2E7D32" } },
+            alignment: { horizontal: "center" },
+            border: { top: {style: "thin"}, bottom: {style: "thin"} }
+        };
+
+        // --- Headers ---
+        const headers = ["Visit Date", "Sales Person", "Total Visits", "Regular", "Follow-up", "Mature Order", "Meter Reading"];
+        excelData.push(headers.map(h => ({ v: h, s: headerStyle })));
+        currentRow++;
+
+        // --- Data Processing ---
+        reportData.report.forEach((day) => {
+            const dateStartRow = currentRow;
+
+            // Har salesperson ki row
+            day.data.forEach((row) => {
+                excelData.push([
+                    { v: formatForDisplay(day.visit_date), s: bodyStyle },
+                    { v: row.sales_person, s: bodyStyle },
+                    { v: row.total_visits, s: bodyStyle },
+                    { v: row.regular_visit, s: bodyStyle },
+                    { v: row.followup_visit, s: bodyStyle },
+                    { v: row.mature_order, s: bodyStyle },
+                    { v: row.meter_reading, s: bodyStyle }
+                ]);
+                currentRow++;
+            });
+
+            // Daily Sub-Total Row
+            excelData.push([
+                { v: "Daily Total", s: subTotalStyle },
+                { v: `Sales Persons: ${day.data.length}`, s: subTotalStyle },
+                { v: day.date_summary.total_visits, s: subTotalStyle },
+                { v: day.date_summary.regular, s: subTotalStyle },
+                { v: day.date_summary.followup, s: subTotalStyle },
+                { v: day.date_summary.mature, s: subTotalStyle },
+                { v: "-", s: subTotalStyle }
+            ]);
+            
+            // Date column ko merge karna (jaisa UI mein rowSpan hai)
+            merges.push({ s: { r: dateStartRow, c: 0 }, e: { r: currentRow, c: 0 } });
+            currentRow++;
+        });
+
+        const worksheet = XLSX.utils.aoa_to_sheet(excelData);
+        worksheet['!merges'] = merges;
+        worksheet['!cols'] = [{ wch: 15 }, { wch: 25 }, { wch: 12 }, { wch: 10 }, { wch: 12 }, { wch: 15 }, { wch: 20 }];
+
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Summary");
+        XLSX.writeFile(workbook, `Summary_Report_${fromDate}_to_${toDate}.xlsx`);
+    };
 
     const fetchReport = async () => {
         setLoading(true);
@@ -68,6 +145,19 @@ const SummaryReports = () => {
                         <Button variant="contained" disableElevation fullWidth startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <SearchIcon />}
                             onClick={fetchReport} sx={{ bgcolor: '#2e7d32', '&:hover': { bgcolor: '#1b5e20' }, height: '40px' }}>
                             {loading ? 'Generating...' : 'Generate'}
+                        </Button>
+                    </Grid>
+
+                    <Grid item xs={12} sm={2.5}>
+                        <Button 
+                            variant="outlined" 
+                            fullWidth 
+                            startIcon={<DownloadIcon />}
+                            onClick={exportSummaryToExcel}
+                            disabled={!reportData}
+                            sx={{ color: '#1b5e20', borderColor: '#1b5e20', height: '40px' }}
+                        >
+                            Export Excel
                         </Button>
                     </Grid>
                 </Grid>

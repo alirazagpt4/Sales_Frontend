@@ -64,10 +64,17 @@ const Sidebar = ({ drawerWidth }) => {
           <ListItemText primary="Users" />
         </ListItemButton>
         {/* Items */}
-        <ListItemButton onClick={() => navigate('/items')} selected={location.pathname === '/items'}>
+
+        {/* <ListItemButton onClick={() => navigate('/items')} selected={location.pathname === '/items'}>
           <ListItemIcon><InventoryIcon /></ListItemIcon>
           <ListItemText primary="Items" />
-        </ListItemButton>
+        </ListItemButton> */}
+
+        {/* <ListItemButton onClick={() => navigate('/sale-orders')} selected={location.pathname === '/sale-orders'}>
+          <ListItemIcon><InventoryIcon /></ListItemIcon>
+          <ListItemText primary="SaleOrder" />
+        </ListItemButton> */}
+
 
         
 

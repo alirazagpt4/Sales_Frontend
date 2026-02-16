@@ -1,3 +1,6 @@
+// import * as XLSX from 'xlsx'; // Excel export ke liye library
+import XLSX from 'xlsx-js-style';
+
 import React, { useState, useEffect } from 'react';
 import {
     Typography, Box, TextField, Button, Grid, Paper,
@@ -35,8 +38,84 @@ const Reports = () => {
     const [fetchingUsers, setFetchingUsers] = useState(true);
     const [error, setError] = useState(null);
 
-   
-//    purpose label mapping
+
+   const exportToExcel = () => {
+    if (!reportData || !reportData.report) return;
+
+    const excelData = [];
+    const merges = [];
+    let currentRow = 0;
+
+    // --- 1. Header Style (Portal Green) ---
+    const headerStyle = {
+        fill: { fgColor: { rgb: "2E7D32" } }, // Green Background
+        font: { color: { rgb: "FFFFFF" }, bold: true, sz: 12 }, // White Bold Font
+        alignment: { vertical: "center", horizontal: "center" },
+        border: {
+            top: { style: "thin", color: { rgb: "000000" } },
+            bottom: { style: "thin", color: { rgb: "000000" } }
+        }
+    };
+
+    // --- 2. Body Style ---
+    const bodyStyle = {
+        alignment: { vertical: "center", horizontal: "center", wrapText: true },
+        border: {
+            top: { style: "thin", color: { rgb: "DDDDDD" } },
+            bottom: { style: "thin", color: { rgb: "DDDDDD" } },
+            left: { style: "thin", color: { rgb: "DDDDDD" } },
+            right: { style: "thin", color: { rgb: "DDDDDD" } }
+        }
+    };
+
+    // Headers set karna
+    const headers = [
+        "Date", "Time", "Type", "Customer Name", "Tehsil", 
+        "City", "Region", "Visit Purpose", "Bags Potential", "Day Start Info"
+    ];
+    
+    // Header Row with Style
+    excelData.push(headers.map(h => ({ v: h, s: headerStyle })));
+    currentRow++;
+
+    reportData.report.forEach((group) => {
+        const startRow = currentRow;
+
+        group.visits.forEach((visit) => {
+            excelData.push([
+                { v: group.date, s: bodyStyle },
+                { v: visit.visit_time || 'N/A', s: bodyStyle },
+                { v: visit.type, s: bodyStyle },
+                { v: visit.customer_name, s: bodyStyle },
+                { v: visit.tehsil, s: bodyStyle },
+                { v: visit.city, s: bodyStyle },
+                { v: visit.region, s: bodyStyle },
+                { v: getVisitPurposeLabel(visit.visit_purpose), s: bodyStyle },
+                { v: visit.bags_potential, s: bodyStyle },
+                { v: `Started: ${formatTime(group.start_time)}\nMeter: ${group.meter_reading}`, s: bodyStyle }
+            ]);
+            currentRow++;
+        });
+
+        if (group.visits.length > 1) {
+            merges.push({ s: { r: startRow, c: 0 }, e: { r: currentRow - 1, c: 0 } }); // Date Merge
+            merges.push({ s: { r: startRow, c: 9 }, e: { r: currentRow - 1, c: 9 } }); // Info Merge
+        }
+    });
+
+    const worksheet = XLSX.utils.aoa_to_sheet(excelData);
+    worksheet['!merges'] = merges;
+    worksheet['!cols'] = [
+        { wch: 15 }, { wch: 12 }, { wch: 12 }, { wch: 25 }, { wch: 15 },
+        { wch: 15 }, { wch: 12 }, { wch: 25 }, { wch: 15 }, { wch: 35 }
+    ];
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Daily Report");
+    XLSX.writeFile(workbook, `FSPL_Report_${selectedName}.xlsx`);
+};
+
+    //    purpose label mapping
     const getVisitPurposeLabel = (purpose) => {
         const mapping = {
             'New': 'Customer Regular Visit',
@@ -104,27 +183,27 @@ const Reports = () => {
     };
 
     useEffect(() => {
-    const fetchUsersList = async () => {
-        try {
-            const response = await API.get('/users');
-            const data = response.data.users || response.data || [];
-            
-            // Yahan filter lagaya hai taake 'admin' nikal jaye
-            // Agar aapke database mein field ka naam 'role' hai toh u.role use karein
-            // Agar aap 'admin' ko uske naam se pehchante hain toh u.name use karein
-            const filteredUsers = Array.isArray(data) 
-                ? data.filter(u => u.role !== 'admin' && u.name.toLowerCase() !== 'admin') 
-                : [];
+        const fetchUsersList = async () => {
+            try {
+                const response = await API.get('/users');
+                const data = response.data.users || response.data || [];
 
-            setUsers(filteredUsers);
-        } catch (err) {
-            setUsers([]);
-        } finally {
-            setFetchingUsers(false);
-        }
-    };
-    fetchUsersList();
-}, []);
+                // Yahan filter lagaya hai taake 'admin' nikal jaye
+                // Agar aapke database mein field ka naam 'role' hai toh u.role use karein
+                // Agar aap 'admin' ko uske naam se pehchante hain toh u.name use karein
+                const filteredUsers = Array.isArray(data)
+                    ? data.filter(u => u.role !== 'admin' && u.name.toLowerCase() !== 'admin')
+                    : [];
+
+                setUsers(filteredUsers);
+            } catch (err) {
+                setUsers([]);
+            } finally {
+                setFetchingUsers(false);
+            }
+        };
+        fetchUsersList();
+    }, []);
 
     const fetchReport = async () => {
         if (!selectedName) {
@@ -192,6 +271,19 @@ const Reports = () => {
                         <Button variant="contained" disableElevation fullWidth startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <SearchIcon />}
                             onClick={fetchReport} sx={{ bgcolor: '#2e7d32', '&:hover': { bgcolor: '#1b5e20' }, height: '40px' }}>
                             Generate
+                        </Button>
+                    </Grid>
+
+                    <Grid item xs={12} sm={3}>
+                        <Button
+                            variant="outlined"
+                            fullWidth
+                            startIcon={<DownloadIcon />}
+                            onClick={exportToExcel}
+                            disabled={!reportData} // Jab tak report generate na ho, button band rahega
+                            sx={{ color: '#1b5e20', borderColor: '#1b5e20', height: '40px', '&:hover': { borderColor: '#2e7d32', bgcolor: '#f1f8e9' } }}
+                        >
+                            Export Excel
                         </Button>
                     </Grid>
                 </Grid>
