@@ -35,7 +35,7 @@ const HEADERS = [
     // { label: 'Email', align: 'left' },
     { label: 'Mobile', align: 'left' },    // <--- ADD THIS
     { label: 'WhatsApp', align: 'left' },
-    { label: 'Role', align: 'left' },
+    { label: 'Report To', align: 'left' },
     { label: 'City', align: 'left' },        // ✅ NEW: City
     // { label: 'Report To', align: 'left' }, 
     { label: 'Region', align: 'left' },       // ✅ NEW: City
@@ -52,7 +52,8 @@ const initialFormData = {
     whatsapp_ph: '',
     city_id: '', // Integer ID will be sent
     designation: '',
-    // referred_to: '',
+    designationId: '',
+    reportTo: '',
     region: ''
 };
 
@@ -72,7 +73,12 @@ const REGIONS = [
     'Sahiwal',
     'Narowal',
     'Pindi Bhattian',
-    'Gujranwala'
+    'Gujranwala',
+    'Multan',
+    'Bahawalpur',
+    'Khanewal',
+    'Jaranwala',
+    'Rawalpindi'
 ];
 
 
@@ -89,6 +95,10 @@ const Users = () => {
 
     // Inside Users component
     const [cities, setCities] = useState([]); // To store city list
+    const [designations, setDesignations] = useState([]); // Designation list ke liye
+    const [managers, setManagers] = useState([]);
+
+
     const fetchCities = useCallback(async () => {
         try {
             // Assume API endpoint is /cities
@@ -97,6 +107,28 @@ const Users = () => {
             setCities(response.data);
         } catch (err) {
             console.error("Failed to fetch cities:", err);
+        }
+    }, []);
+
+
+    const fetchDesignations = useCallback(async () => {
+        try {
+            const response = await API.get('/designations'); // Aapki nayi API
+            setDesignations(response.data);
+        } catch (err) {
+            console.error("Designations fetch failed:", err);
+        }
+    }, []);
+
+    const fetchManagers = useCallback(async () => {
+        try {
+            // Hum saare users mangwa rahe hain dropdown ke liye
+            const response = await API.get('/users?limit=1000');
+            // Filter: Sirf wo bante jin ka designationId 1 (Sales Executive) NAHI hai
+            const filteredManagers = response.data.users.filter(u => u.designationId !== 1);
+            setManagers(filteredManagers);
+        } catch (err) {
+            console.error("Managers fetch failed:", err);
         }
     }, []);
 
@@ -135,7 +167,7 @@ const Users = () => {
         try {
             // API call mein pagination parameters bheje
             const response = await API.get(`/users?page=${page}&limit=${USERS_PER_PAGE}`);
-            console.log("USERSSSSS ......", response.data);
+            console.log("USERSSSSS ......", response.data.users);
 
             // ✅ API Response Parsing Update
             const data = response.data;
@@ -155,6 +187,8 @@ const Users = () => {
     useEffect(() => {
         fetchUsers();
         fetchCities();
+        fetchDesignations();
+        fetchManagers();
         // 30 Seconds ka Interval setup karne ke liye
         const interval = setInterval(() => {
             console.log("Auto-refreshing user list...");
@@ -164,7 +198,7 @@ const Users = () => {
         // Component unmount hote waqt interval ko clear karna zaroori hai
         // warna memory leak ho sakti hai
         return () => clearInterval(interval);
-    }, [fetchUsers]);
+    }, [fetchUsers , fetchCities, fetchDesignations, fetchManagers]); // Multiple dependencies
     // ...
 
 
@@ -225,7 +259,7 @@ const Users = () => {
 
     const handleOpenEditModal = (user) => {
 
-       
+
         setEditingUser(user);
         setFormData({
             name: user.name,
@@ -238,6 +272,8 @@ const Users = () => {
             city_id: String(user.city_id || ''), // Assuming cityDetails has id
             designation: String(user.designation || ''),
             region: String(user.region || ''),
+            designationId: String(user.designationId || ''),
+            reportTo: String(user.reportTo || ''),
         });
         setIsModalOpen(true);
     };
@@ -356,7 +392,7 @@ const Users = () => {
             {/* --- User Table --- */}
             {/* --- User Table --- */}
             <TableContainer component={Paper} elevation={3} sx={{ borderRadius: '8px', overflow: 'hidden' }}>
-                
+
                 {/* <Typography variant="h6">
                     My Role: {user?.role} | Am I SuperAdmin? {user?.role === 'superadmin' ? 'YES' : 'NO'}
                 </Typography> */}
@@ -407,12 +443,12 @@ const Users = () => {
                                     minWidth: 110,
                                     whiteSpace: 'nowrap'
                                 }}>
-                                    {user.designation || 'N/A'}
+                                    {user.designationDetails?.designation || 'N/A'}
                                 </TableCell>
 
                                 <TableCell sx={{ fontSize: '0.65rem' }}>{user.mobile_ph || 'N/A'}</TableCell>
                                 <TableCell sx={{ fontSize: '0.65rem' }}>{user.whatsapp_ph || 'N/A'}</TableCell>
-                                <TableCell sx={{ fontSize: '0.57rem', textTransform: 'capitalize' }}>{user.role || 'N/A'}</TableCell>
+                                <TableCell sx={{ fontSize: '0.57rem', textTransform: 'capitalize' }}>{user.manager?.name || 'N/A'}</TableCell>
                                 <TableCell sx={{ fontSize: '0.65rem' }}>{user.cityDetails?.name || 'N/A'}</TableCell>
 
                                 <TableCell sx={{
@@ -613,6 +649,43 @@ const Users = () => {
                                     ))}
                                 </Select>
                             </FormControl> */}
+
+                            <FormControl fullWidth margin="normal" required>
+                                <InputLabel id="designation-select-label">Designation</InputLabel>
+                                <Select
+                                    labelId="designation-select-label"
+                                    label="Designation"
+                                    name="designationId"
+                                    value={formData.designationId}
+                                    onChange={handleFormChange}
+                                >
+                                    <MenuItem value=""><em>Select Designation</em></MenuItem>
+                                    {designations.map(des => (
+                                        <MenuItem key={des.id} value={des.id}>
+                                            {des.designation}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+
+
+                            <FormControl fullWidth margin="normal">
+                                <InputLabel id="report-to-label">Reports To (Manager)</InputLabel>
+                                <Select
+                                    labelId="report-to-label"
+                                    label="Reports To (Manager)"
+                                    name="reportTo"
+                                    value={formData.reportTo}
+                                    onChange={handleFormChange}
+                                >
+                                    <MenuItem value=""><em>None / Self</em></MenuItem>
+                                    {managers.map(m => (
+                                        <MenuItem key={m.id} value={m.id}>
+                                            {m.fullname} ({m.designationDetails?.designation || 'No Rank'})
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
 
 
                         </DialogContent>
