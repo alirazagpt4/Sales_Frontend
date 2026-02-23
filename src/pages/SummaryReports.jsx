@@ -104,6 +104,7 @@ const SummaryReports = () => {
         try {
             const response = await API.get(`reports/summary-report?fromDate=${fromDate}&toDate=${toDate}`);
             if (response.data && response.data.report) {
+                console.log("Fetched Summary Report Data:", response.data.report);
                 setReportData(response.data);
             } else {
                 setReportData(null);
@@ -217,39 +218,54 @@ const SummaryReports = () => {
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {reportData.report.map((day, dIndex) => (
-                                <React.Fragment key={dIndex}>
-                                    {day.data.map((row, rIndex) => (
-                                        <TableRow key={`${dIndex}-${rIndex}`}>
-                                            {/* Date Merged Column */}
-                                            {rIndex === 0 && (
-                                                <TableCell 
-                                                    rowSpan={day.data.length + 1} // +1 for the summary row
-                                                    sx={{ border: '1px solid #ddd', textAlign: 'center', verticalAlign: 'middle', bgcolor: '#fff', fontWeight: 'bold' }}
-                                                >
-                                                    {formatForDisplay(day.visit_date)}
-                                                </TableCell>
-                                            )}
-                                            <TableCell sx={{ border: '1px solid #ddd' }}>{row.sales_person}</TableCell>
-                                            <TableCell align="center" sx={{ border: '1px solid #ddd' }}>{row.total_visits}</TableCell>
-                                            <TableCell align="center" sx={{ border: '1px solid #ddd' }}>{row.regular_visit}</TableCell>
-                                            <TableCell align="center" sx={{ border: '1px solid #ddd' }}>{row.followup_visit}</TableCell>
-                                            <TableCell align="center" sx={{ border: '1px solid #ddd' }}>{row.mature_order}</TableCell>
-                                            <TableCell sx={{ border: '1px solid #ddd', fontSize: '0.8rem' }}>{row.meter_reading}</TableCell>
-                                        </TableRow>
-                                    ))}
-                                    {/* Daily Sub-Total Row */}
-                                    <TableRow sx={{ bgcolor: '#f9f9f9' }}>
-                                        <TableCell sx={{ border: '1px solid #ddd', fontWeight: 'bold', color: '#2e7d32' }}>Total Sales Person : {day.data.length}</TableCell>
-                                        <TableCell align="center" sx={{ border: '1px solid #ddd', fontWeight: 'bold' }}>{day.date_summary.total_visits}</TableCell>
-                                        <TableCell align="center" sx={{ border: '1px solid #ddd', fontWeight: 'bold' }}>{day.date_summary.regular}</TableCell>
-                                        <TableCell align="center" sx={{ border: '1px solid #ddd', fontWeight: 'bold' }}>{day.date_summary.followup}</TableCell>
-                                        <TableCell align="center" sx={{ border: '1px solid #ddd', fontWeight: 'bold' }}>{day.date_summary.mature}</TableCell>
-                                        <TableCell sx={{ border: '1px solid #ddd' }} />
-                                    </TableRow>
-                                </React.Fragment>
-                            ))}
-                        </TableBody>
+    {reportData.report.map((day, dIndex) => (
+        <React.Fragment key={dIndex}>
+            {day.data.map((row, rIndex) => {
+                // Leave Check
+                const isOnLeave = row.is_leave === true || row.status === "LEAVE";
+
+                return (
+                    <TableRow key={`${dIndex}-${rIndex}`}>
+                        {/* Date Merged Column */}
+                        {rIndex === 0 && (
+                            <TableCell 
+                                rowSpan={day.data.length + 1} 
+                                sx={{ border: '1px solid #ddd', textAlign: 'center', verticalAlign: 'middle', bgcolor: '#fff', fontWeight: 'bold' }}
+                            >
+                                {formatForDisplay(day.visit_date)}
+                            </TableCell>
+                        )}
+                        
+                        <TableCell sx={{ border: '1px solid #ddd' }}>{row.sales_person}</TableCell>
+                        
+                        {/* Visits Columns: Agar leave hai toh '0' ya '-' dikhayen */}
+                        <TableCell align="center" sx={{ border: '1px solid #ddd' }}>{isOnLeave ? 0 : row.total_visits}</TableCell>
+                        <TableCell align="center" sx={{ border: '1px solid #ddd' }}>{isOnLeave ? 0 : row.regular_visit}</TableCell>
+                        <TableCell align="center" sx={{ border: '1px solid #ddd' }}>{isOnLeave ? 0 : row.followup_visit}</TableCell>
+                        <TableCell align="center" sx={{ border: '1px solid #ddd' }}>{isOnLeave ? 0 : row.mature_order}</TableCell>
+                        
+                        {/* Meter Reading Column: Yahan condition lagayi hai */}
+                        <TableCell sx={{ border: '1px solid #ddd', fontWeight: isOnLeave ? 'normal' : 'normal', color: isOnLeave ? '#f44336' : 'inherit' }}>
+                            {isOnLeave ? "LEAVE" : row.meter_reading}
+                        </TableCell>
+                    </TableRow>
+                );
+            })}
+            
+            {/* Daily Sub-Total Row */}
+            <TableRow sx={{ bgcolor: '#f9f9f9' }}>
+                <TableCell sx={{ border: '1px solid #ddd', fontWeight: 'bold', color: '#2e7d32' }}>
+                    Total Sales Person : {day.data.length}
+                </TableCell>
+                <TableCell align="center" sx={{ border: '1px solid #ddd', fontWeight: 'bold' }}>{day.date_summary.total_visits}</TableCell>
+                <TableCell align="center" sx={{ border: '1px solid #ddd', fontWeight: 'bold' }}>{day.date_summary.regular}</TableCell>
+                <TableCell align="center" sx={{ border: '1px solid #ddd', fontWeight: 'bold' }}>{day.date_summary.followup}</TableCell>
+                <TableCell align="center" sx={{ border: '1px solid #ddd', fontWeight: 'bold' }}>{day.date_summary.mature}</TableCell>
+                <TableCell sx={{ border: '1px solid #ddd' }} />
+            </TableRow>
+        </React.Fragment>
+    ))}
+</TableBody>
                     </Table>
                 </TableContainer>
             )}

@@ -39,81 +39,81 @@ const Reports = () => {
     const [error, setError] = useState(null);
 
 
-   const exportToExcel = () => {
-    if (!reportData || !reportData.report) return;
+    const exportToExcel = () => {
+        if (!reportData || !reportData.report) return;
 
-    const excelData = [];
-    const merges = [];
-    let currentRow = 0;
+        const excelData = [];
+        const merges = [];
+        let currentRow = 0;
 
-    // --- 1. Header Style (Portal Green) ---
-    const headerStyle = {
-        fill: { fgColor: { rgb: "2E7D32" } }, // Green Background
-        font: { color: { rgb: "FFFFFF" }, bold: true, sz: 12 }, // White Bold Font
-        alignment: { vertical: "center", horizontal: "center" },
-        border: {
-            top: { style: "thin", color: { rgb: "000000" } },
-            bottom: { style: "thin", color: { rgb: "000000" } }
-        }
-    };
+        // --- 1. Header Style (Portal Green) ---
+        const headerStyle = {
+            fill: { fgColor: { rgb: "2E7D32" } }, // Green Background
+            font: { color: { rgb: "FFFFFF" }, bold: true, sz: 12 }, // White Bold Font
+            alignment: { vertical: "center", horizontal: "center" },
+            border: {
+                top: { style: "thin", color: { rgb: "000000" } },
+                bottom: { style: "thin", color: { rgb: "000000" } }
+            }
+        };
 
-    // --- 2. Body Style ---
-    const bodyStyle = {
-        alignment: { vertical: "center", horizontal: "center", wrapText: true },
-        border: {
-            top: { style: "thin", color: { rgb: "DDDDDD" } },
-            bottom: { style: "thin", color: { rgb: "DDDDDD" } },
-            left: { style: "thin", color: { rgb: "DDDDDD" } },
-            right: { style: "thin", color: { rgb: "DDDDDD" } }
-        }
-    };
+        // --- 2. Body Style ---
+        const bodyStyle = {
+            alignment: { vertical: "center", horizontal: "center", wrapText: true },
+            border: {
+                top: { style: "thin", color: { rgb: "DDDDDD" } },
+                bottom: { style: "thin", color: { rgb: "DDDDDD" } },
+                left: { style: "thin", color: { rgb: "DDDDDD" } },
+                right: { style: "thin", color: { rgb: "DDDDDD" } }
+            }
+        };
 
-    // Headers set karna
-    const headers = [
-        "Date", "Time", "Type", "Customer Name", "Tehsil", 
-        "City", "Region", "Visit Purpose", "Bags Potential", "Day Start Info"
-    ];
-    
-    // Header Row with Style
-    excelData.push(headers.map(h => ({ v: h, s: headerStyle })));
-    currentRow++;
+        // Headers set karna
+        const headers = [
+            "Date", "Time", "Type", "Customer Name", "Tehsil",
+            "City", "Region", "Visit Purpose", "Bags Potential", "Day Start Info"
+        ];
 
-    reportData.report.forEach((group) => {
-        const startRow = currentRow;
+        // Header Row with Style
+        excelData.push(headers.map(h => ({ v: h, s: headerStyle })));
+        currentRow++;
 
-        group.visits.forEach((visit) => {
-            excelData.push([
-                { v: group.date, s: bodyStyle },
-                { v: visit.visit_time || 'N/A', s: bodyStyle },
-                { v: visit.type, s: bodyStyle },
-                { v: visit.customer_name, s: bodyStyle },
-                { v: visit.tehsil, s: bodyStyle },
-                { v: visit.city, s: bodyStyle },
-                { v: visit.region, s: bodyStyle },
-                { v: getVisitPurposeLabel(visit.visit_purpose), s: bodyStyle },
-                { v: visit.bags_potential, s: bodyStyle },
-                { v: `Started: ${formatTime(group.start_time)}\nMeter: ${group.meter_reading}`, s: bodyStyle }
-            ]);
-            currentRow++;
+        reportData.report.forEach((group) => {
+            const startRow = currentRow;
+
+            group.visits.forEach((visit) => {
+                excelData.push([
+                    { v: group.date, s: bodyStyle },
+                    { v: visit.visit_time || 'N/A', s: bodyStyle },
+                    { v: visit.type, s: bodyStyle },
+                    { v: visit.customer_name, s: bodyStyle },
+                    { v: visit.tehsil, s: bodyStyle },
+                    { v: visit.city, s: bodyStyle },
+                    { v: visit.region, s: bodyStyle },
+                    { v: getVisitPurposeLabel(visit.visit_purpose), s: bodyStyle },
+                    { v: visit.bags_potential, s: bodyStyle },
+                    { v: `Started: ${formatTime(group.start_time)}\nMeter: ${group.meter_reading}`, s: bodyStyle }
+                ]);
+                currentRow++;
+            });
+
+            if (group.visits.length > 1) {
+                merges.push({ s: { r: startRow, c: 0 }, e: { r: currentRow - 1, c: 0 } }); // Date Merge
+                merges.push({ s: { r: startRow, c: 9 }, e: { r: currentRow - 1, c: 9 } }); // Info Merge
+            }
         });
 
-        if (group.visits.length > 1) {
-            merges.push({ s: { r: startRow, c: 0 }, e: { r: currentRow - 1, c: 0 } }); // Date Merge
-            merges.push({ s: { r: startRow, c: 9 }, e: { r: currentRow - 1, c: 9 } }); // Info Merge
-        }
-    });
+        const worksheet = XLSX.utils.aoa_to_sheet(excelData);
+        worksheet['!merges'] = merges;
+        worksheet['!cols'] = [
+            { wch: 15 }, { wch: 12 }, { wch: 12 }, { wch: 25 }, { wch: 15 },
+            { wch: 15 }, { wch: 12 }, { wch: 25 }, { wch: 15 }, { wch: 35 }
+        ];
 
-    const worksheet = XLSX.utils.aoa_to_sheet(excelData);
-    worksheet['!merges'] = merges;
-    worksheet['!cols'] = [
-        { wch: 15 }, { wch: 12 }, { wch: 12 }, { wch: 25 }, { wch: 15 },
-        { wch: 15 }, { wch: 12 }, { wch: 25 }, { wch: 15 }, { wch: 35 }
-    ];
-
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Daily Report");
-    XLSX.writeFile(workbook, `FSPL_Report_${selectedName}.xlsx`);
-};
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Daily Report");
+        XLSX.writeFile(workbook, `FSPL_Report_${selectedName}.xlsx`);
+    };
 
     //    purpose label mapping
     const getVisitPurposeLabel = (purpose) => {
@@ -377,78 +377,83 @@ const Reports = () => {
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {reportData.report.map((group, gIndex) => (
-                                group.visits.map((visit, vIndex) => (
+                            {reportData.report.map((group, gIndex) => {
+                                // Leave check: agar leave_status "PRESENT" nahi hai toh matlab leave hai
+                                const isOnLeave = group.is_leave === true || group.leave_status !== "PRESENT";
+
+                                // Agar visits nahi hain toh [null] ki array banate hain taake row render ho
+                                const displayVisits = group.visits.length > 0 ? group.visits : [null];
+
+                                return displayVisits.map((visit, vIndex) => (
                                     <TableRow key={`${gIndex}-${vIndex}`}>
-                                        {/* ✅ Date: Merged Row */}
+
+                                        {/* 1. Date Column */}
                                         {vIndex === 0 && (
                                             <TableCell
-                                                rowSpan={group.visits.length}
-                                                sx={{ border: '1px solid #ddd', textAlign: 'center', verticalAlign: 'middle', bgcolor: '#fff' }}
+                                                rowSpan={displayVisits.length}
+                                                sx={{ border: '1px solid #ddd', textAlign: 'center', verticalAlign: 'middle' }}
                                             >
                                                 {formatForDisplay(group.date)}
                                             </TableCell>
                                         )}
 
-                                        <TableCell sx={{ border: '1px solid #ddd' }}>{visit.visit_time || 'N/A'}</TableCell>
-                                        <TableCell sx={{ border: '1px solid #ddd' }}>{visit.type}</TableCell>
-                                        <TableCell sx={{ border: '1px solid #ddd' }}>{visit.customer_name}</TableCell>
-                                        <TableCell sx={{ border: '1px solid #ddd' }}>{visit.tehsil}</TableCell>
-                                        <TableCell sx={{ border: '1px solid #ddd' }}>{visit.city}</TableCell>
-                                        <TableCell sx={{ border: '1px solid #ddd' }}>{visit.region}</TableCell>
-                                        <TableCell sx={{ border: '1px solid #ddd' }}>{getVisitPurposeLabel(visit.visit_purpose)}</TableCell>
-                                        <TableCell sx={{
-                                            border: '1px solid #ddd',
-                                            textAlign: 'center',
-                                            fontWeight: '500',
-                                            width: '60px' // Header ke barabar width
-                                        }}>{visit.bags_potential}</TableCell>
-                                        {/* Visit Location Icon */}
+                                        {/* 2. Visit Columns (Simple text or dash) */}
+                                        <TableCell sx={{ border: '1px solid #ddd' }}>{visit?.visit_time || "-"}</TableCell>
+                                        <TableCell sx={{ border: '1px solid #ddd' }}>{visit?.type || "-"}</TableCell>
+                                        <TableCell sx={{ border: '1px solid #ddd' }}>{visit?.customer_name || (isOnLeave && vIndex === 0 ? "--" : "-")}</TableCell>
+                                        <TableCell sx={{ border: '1px solid #ddd' }}>{visit?.tehsil || "-"}</TableCell>
+                                        <TableCell sx={{ border: '1px solid #ddd' }}>{visit?.city || "-"}</TableCell>
+                                        <TableCell sx={{ border: '1px solid #ddd' }}>{visit?.region || "-"}</TableCell>
+                                        <TableCell sx={{ border: '1px solid #ddd' }}>{visit ? getVisitPurposeLabel(visit.visit_purpose) : "-"}</TableCell>
+                                        <TableCell sx={{ border: '1px solid #ddd', textAlign: 'center' }}>{visit?.bags_potential || "-"}</TableCell>
+
+                                        {/* 3. Visit Location Icon */}
                                         <TableCell sx={{ border: '1px solid #ddd', textAlign: 'center' }}>
-                                            <IconButton size="small" color="primary" onClick={() => handleOpenMap(visit.visit_location?.lat, visit.visit_location?.lng)}>
-                                                <LocationOnIcon fontSize="small" />
-                                            </IconButton>
+                                            {visit ? (
+                                                <IconButton size="small" color="primary" onClick={() => handleOpenMap(visit.visit_location?.lat, visit.visit_location?.lng)}>
+                                                    <LocationOnIcon fontSize="small" />
+                                                </IconButton>
+                                            ) : "-"}
                                         </TableCell>
 
-                                        {/* Meter + Image Icon: Merged Row */}
+                                        {/* 4. Day Start Info (Meter Reading / Leave Status) */}
                                         {vIndex === 0 && (
                                             <TableCell
-                                                rowSpan={group.visits.length}
-                                                sx={{ border: '1px solid #ddd', textAlign: 'center', verticalAlign: 'middle', bgcolor: '#fff' }}
+                                                rowSpan={displayVisits.length}
+                                                sx={{ border: '1px solid #ddd', textAlign: 'center', verticalAlign: 'middle' }}
                                             >
-                                                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
-
-                                                    {/* --- Start Time Section --- */}
-                                                    <Box sx={{ mb: 1 }}>
-                                                        <Typography variant="caption" sx={{ color: '#666', fontWeight: 'bold', display: 'block', fontSize: '0.7rem' }}>
-                                                            STARTED AT
-                                                        </Typography>
-                                                        <Typography variant="body2" sx={{ color: '#1b5e20', fontWeight: '700', bgcolor: '#e8f5e9', px: 1, borderRadius: '4px' }}>
+                                                {isOnLeave ? (
+                                                    <Box>
+                                                        <Typography variant="caption" sx={{ color: '#666', fontWeight: 'bold', display: 'block' }}>STATUS</Typography>
+                                                        <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#f44336' }}>{group.leave_status}</Typography>
+                                                        {/* <Typography variant="caption" sx={{ color: '#888' }}></Typography> */}
+                                                    </Box>
+                                                ) : (
+                                                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
+                                                        <Typography variant="caption" sx={{ color: '#666', fontWeight: 'bold', fontSize: '0.7rem' }}>STARTED AT</Typography>
+                                                        <Typography variant="body2" sx={{ fontWeight: '700' }}>
                                                             {formatTime(group.start_time)}
                                                         </Typography>
+                                                        <Typography variant="body2">
+                                                            {group.meter_reading}
+                                                        </Typography>
+                                                        <Box sx={{ display: 'flex', gap: 0.5 }}>
+                                                            {group.photoUri && (
+                                                                <IconButton size="small" onClick={() => handleShowImage(group.photoUri)} sx={{ color: '#2e7d32' }}>
+                                                                    <VisibilityIcon fontSize="small" />
+                                                                </IconButton>
+                                                            )}
+                                                            <IconButton size="small" onClick={() => handleOpenMap(group.start_location?.lat, group.start_location?.lng)}>
+                                                                <LocationOnIcon fontSize="small" />
+                                                            </IconButton>
+                                                        </Box>
                                                     </Box>
-
-                                                    <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                                                        {group.meter_reading}
-                                                    </Typography>
-                                                    {group.photoUri && (
-                                                        <IconButton
-                                                            size="small"
-                                                            onClick={() => handleShowImage(group.photoUri)}
-                                                            sx={{ color: '#2e7d32', bgcolor: '#f0f4f0', '&:hover': { bgcolor: '#e0eee0' } }}
-                                                        >
-                                                            <VisibilityIcon fontSize="small" />
-                                                        </IconButton>
-                                                    )}
-                                                    <IconButton size="small" color="secondary" onClick={() => handleOpenMap(group.start_location?.lat, group.start_location?.lng)}>
-                                                        <LocationOnIcon fontSize="small" />
-                                                    </IconButton>
-                                                </Box>
+                                                )}
                                             </TableCell>
                                         )}
                                     </TableRow>
-                                ))
-                            ))}
+                                ));
+                            })}
                         </TableBody>
                     </Table>
                 </TableContainer>
