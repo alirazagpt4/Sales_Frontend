@@ -436,7 +436,7 @@ const Users = () => {
                                 <TableCell sx={{ fontSize: '0.65rem' }}>{user.mobile_ph || 'N/A'}</TableCell>
                                 <TableCell sx={{ fontSize: '0.65rem' }}>{user.whatsapp_ph || 'N/A'}</TableCell>
                                 <TableCell sx={{ fontSize: '0.57rem', textTransform: 'capitalize' }}>{user.manager?.name || 'N/A'}</TableCell>
-                                <TableCell sx={{ fontSize: '0.65rem' }}>{user.cityDetails?.name || 'N/A'}</TableCell>
+                                <TableCell sx={{ fontSize: '0.65rem' }}>{user.cityName || 'N/A'}</TableCell>
 
                                 <TableCell sx={{
                                     fontSize: '0.65rem',
