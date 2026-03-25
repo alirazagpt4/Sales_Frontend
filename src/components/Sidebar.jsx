@@ -112,6 +112,17 @@ const Sidebar = ({ drawerWidth }) => {
               <ListItemText primary="Summary Visit Report" />
             </ListItemButton>
 
+
+             {/* Meter Reading Report */}
+            <ListItemButton 
+              sx={{ pl: 3.5 }} 
+              onClick={() => navigate('/meter-reading-reports')} 
+              selected={location.pathname === '/meter-reading-reports'}
+            >
+              
+              <ListItemText primary="Meter Reading Report" />
+            </ListItemButton>
+
           </List>
         </Collapse>
       </List>
