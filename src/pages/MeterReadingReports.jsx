@@ -57,7 +57,7 @@ const MeterReadingReport = () => {
 
         const worksheet = XLSX.utils.aoa_to_sheet(excelData);
         worksheet['!cols'] = [{ wch: 15 }, { wch: 25 }, { wch: 20 }, { wch: 15 }];
-        
+
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "Meter Readings");
         XLSX.writeFile(workbook, `Meter_Report_${selectedName}.xlsx`);
@@ -74,11 +74,16 @@ const MeterReadingReport = () => {
     useEffect(() => {
         const fetchUsersList = async () => {
             try {
-                const response = await API.get('/users');
+                const response = await API.get('/users?limit=1000'); // Assuming this endpoint returns all users without pagination
+                console.log("USERS RESPONSE ......", response.data.users);
                 const data = response.data.users || response.data || [];
+                // 1. Technical Audit: Define excluded IDs in a constant to avoid "Magic Numbers"
+                const EXCLUDED_DESIGNATIONS = [null, 7, 8];
+
                 const filteredUsers = Array.isArray(data)
-                    ? data.filter(u => u.role !== 'admin' && u.name.toLowerCase() !== 'admin')
+                    ? data.filter(u => !EXCLUDED_DESIGNATIONS.includes(u.designationId))
                     : [];
+
                 setUsers(filteredUsers);
             } catch (err) { setUsers([]); }
             finally { setFetchingUsers(false); }
@@ -152,10 +157,10 @@ const MeterReadingReport = () => {
                         <TableHead sx={{ bgcolor: '#f5f5f5' }}>
                             <TableRow>
                                 <TableCell sx={{ fontWeight: 'bold' }}>Date</TableCell>
-                                <TableCell sx={{ fontWeight: 'bold' }}>Name</TableCell>
-                                <TableCell sx={{ fontWeight: 'bold' }}>Reading</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold' }}>Full Name</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold' }}>Meter Reading</TableCell>
                                 <TableCell sx={{ fontWeight: 'bold' }}>Status</TableCell>
-                                <TableCell sx={{ fontWeight: 'bold', textAlign: 'center' }}>Proof</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold', textAlign: 'center' }}>Meter Reading Picture</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
@@ -165,9 +170,9 @@ const MeterReadingReport = () => {
                                     <TableCell>{row.user_fullname}</TableCell>
                                     <TableCell sx={{ fontWeight: 'bold' }}>{row.meter_reading}</TableCell>
                                     <TableCell>
-                                        <Box sx={{ 
+                                        <Box sx={{
                                             color: row.status === 'PRESENT' ? 'green' : 'orange',
-                                            fontWeight: 'bold' 
+                                            fontWeight: 'bold'
                                         }}>
                                             {row.status}
                                         </Box>

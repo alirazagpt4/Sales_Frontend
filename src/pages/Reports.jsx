@@ -185,14 +185,15 @@ const Reports = () => {
     useEffect(() => {
         const fetchUsersList = async () => {
             try {
-                const response = await API.get('/users');
+                const response = await API.get('/users?limit=1000'); // Assuming this endpoint returns all users without pagination
                 const data = response.data.users || response.data || [];
+                console.log("USERS RESPONSE ......", response.data.users);
 
-                // Yahan filter lagaya hai taake 'admin' nikal jaye
-                // Agar aapke database mein field ka naam 'role' hai toh u.role use karein
-                // Agar aap 'admin' ko uske naam se pehchante hain toh u.name use karein
+                // 1. Technical Audit: Define excluded IDs in a constant to avoid "Magic Numbers"
+                const EXCLUDED_DESIGNATIONS = [null, 7, 8];
+
                 const filteredUsers = Array.isArray(data)
-                    ? data.filter(u => u.role !== 'admin' && u.name.toLowerCase() !== 'admin')
+                    ? data.filter(u => !EXCLUDED_DESIGNATIONS.includes(u.designationId))
                     : [];
 
                 setUsers(filteredUsers);

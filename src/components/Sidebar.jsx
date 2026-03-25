@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Toolbar, Divider, Box, Collapse } from '@mui/material';
+import { Drawer, List, ListItemButton, ListItemIcon, ListItemText, Toolbar, Divider, Box, Collapse, Tooltip } from '@mui/material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import PeopleIcon from '@mui/icons-material/People';
@@ -7,19 +7,14 @@ import GroupIcon from '@mui/icons-material/Group';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
-import InventoryIcon from '@mui/icons-material/Inventory';
-// import CircleIcon from '@mui/icons-material/Circle'; // Sub-menu ke liye chota icon
-// import EventNoteIcon from '@mui/icons-material/EventNote'; // Daily Visit ke liye perfect hai
-// import SummarizeIcon from '@mui/icons-material/Summarize'; // Summary ke liye professional hai
 
-const Sidebar = ({ drawerWidth }) => {
+const Sidebar = ({ drawerWidth, open }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  
-  // Is state se Reports wala hissa khulay ga ya band hoga
   const [openReports, setOpenReports] = useState(false);
 
   const handleReportsToggle = () => {
+    if (!open) return; // Agar sidebar band hai toh toggle na ho
     setOpenReports(!openReports);
   };
 
@@ -27,102 +22,102 @@ const Sidebar = ({ drawerWidth }) => {
 
   return (
     <Drawer
+      variant="permanent"
       sx={{
-        width: drawerWidth,
+        width: open ? drawerWidth : 64,
         flexShrink: 0,
+        whiteSpace: 'nowrap',
+        boxSizing: 'border-box',
         '& .MuiDrawer-paper': {
-          width: drawerWidth,
-          boxSizing: 'border-box',
+          width: open ? drawerWidth : 64,
+          overflowX: 'hidden',
+          transition: (theme) => theme.transitions.create('width', {
+            easing: theme.transitions.easing.sharp,
+            duration: theme.transitions.duration.enteringScreen,
+          }),
         },
       }}
-      variant="permanent"
-      anchor="left"
     >
-      <Toolbar>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', width: '100%', pl: 4 }}>
-          <img src={FarmSolutionsLogoPath} alt="FarmSolutions Logo" style={{ height: 60, filter: 'brightness(1.1)' }} />
-        </Box>
+      <Toolbar sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', px: [1] }}>
+        {open ? (
+          <Box sx={{ display: 'flex', alignItems: 'center', pl: 2 }}>
+             <img src={FarmSolutionsLogoPath} alt="Logo" style={{ height: 50 }} />
+          </Box>
+        ) : (
+          <img src={FarmSolutionsLogoPath} alt="Logo" style={{ height: 30 }} /> 
+        )}
       </Toolbar>
       <Divider />
       
       <List>
         {/* Dashboard */}
-        <ListItemButton onClick={() => navigate('/')} selected={location.pathname === '/'}>
-          <ListItemIcon><DashboardIcon /></ListItemIcon>
-          <ListItemText primary="Dashboard" />
-        </ListItemButton>
+        <Tooltip title={!open ? "Dashboard" : ""} placement="right">
+            <ListItemButton 
+                onClick={() => navigate('/')} 
+                selected={location.pathname === '/'}
+                sx={{ minHeight: 48, justifyContent: open ? 'initial' : 'center', px: 2.5 }}
+            >
+                <ListItemIcon sx={{ minWidth: 0, mr: open ? 3 : 'auto', justifyContent: 'center' }}>
+                    <DashboardIcon />
+                </ListItemIcon>
+                {open && <ListItemText primary="Dashboard" />}
+            </ListItemButton>
+        </Tooltip>
 
         {/* Customers */}
-        <ListItemButton onClick={() => navigate('/customers')} selected={location.pathname === '/customers'}>
-          <ListItemIcon><GroupIcon /></ListItemIcon>
-          <ListItemText primary="Customers" />
-        </ListItemButton>
+        <Tooltip title={!open ? "Customers" : ""} placement="right">
+            <ListItemButton 
+                onClick={() => navigate('/customers')} 
+                selected={location.pathname === '/customers'}
+                sx={{ minHeight: 48, justifyContent: open ? 'initial' : 'center', px: 2.5 }}
+            >
+                <ListItemIcon sx={{ minWidth: 0, mr: open ? 3 : 'auto', justifyContent: 'center' }}>
+                    <GroupIcon />
+                </ListItemIcon>
+                {open && <ListItemText primary="Customers" />}
+            </ListItemButton>
+        </Tooltip>
 
         {/* Users */}
-        <ListItemButton onClick={() => navigate('/users')} selected={location.pathname === '/users'}>
-          <ListItemIcon><PeopleIcon /></ListItemIcon>
-          <ListItemText primary="Users" />
-        </ListItemButton>
-        {/* Items */}
-
-        {/* <ListItemButton onClick={() => navigate('/items')} selected={location.pathname === '/items'}>
-          <ListItemIcon><InventoryIcon /></ListItemIcon>
-          <ListItemText primary="Items" />
-        </ListItemButton> */}
-
-        {/* <ListItemButton onClick={() => navigate('/sale-orders')} selected={location.pathname === '/sale-orders'}>
-          <ListItemIcon><InventoryIcon /></ListItemIcon>
-          <ListItemText primary="SaleOrder" />
-        </ListItemButton> */}
-
-
-        
-
-        {/* --- MAIN REPORTS PARENT (Clickable to Expand) --- */}
-        <ListItemButton onClick={handleReportsToggle}>
-          <ListItemIcon>
-            <BarChartIcon />
-          </ListItemIcon>
-          <ListItemText primary="Reports" />
-          {/* Arrow icon jo rotate hota hai */}
-          {openReports ? <ExpandLess /> : <ExpandMore />}
-        </ListItemButton>
-
-        {/* --- NESTED ITEMS (In par click karne se page khulega) --- */}
-        <Collapse in={openReports} timeout="auto" unmountOnExit>
-          <List component="div" disablePadding>
-            
-            {/* DVR Report */}
+        <Tooltip title={!open ? "Users" : ""} placement="right">
             <ListItemButton 
-              sx={{ pl: 3.5 }} 
-              onClick={() => navigate('/reports')} 
-              selected={location.pathname === '/reports'}
+                onClick={() => navigate('/users')} 
+                selected={location.pathname === '/users'}
+                sx={{ minHeight: 48, justifyContent: open ? 'initial' : 'center', px: 2.5 }}
             >
-              
+                <ListItemIcon sx={{ minWidth: 0, mr: open ? 3 : 'auto', justifyContent: 'center' }}>
+                    <PeopleIcon />
+                </ListItemIcon>
+                {open && <ListItemText primary="Users" />}
+            </ListItemButton>
+        </Tooltip>
+
+        {/* Reports Parent */}
+        <Tooltip title={!open ? "Reports" : ""} placement="right">
+            <ListItemButton 
+                onClick={handleReportsToggle}
+                sx={{ minHeight: 48, justifyContent: open ? 'initial' : 'center', px: 2.5 }}
+            >
+                <ListItemIcon sx={{ minWidth: 0, mr: open ? 3 : 'auto', justifyContent: 'center' }}>
+                    <BarChartIcon />
+                </ListItemIcon>
+                {open && <ListItemText primary="Reports" />}
+                {open && (openReports ? <ExpandLess /> : <ExpandMore />)}
+            </ListItemButton>
+        </Tooltip>
+
+        {/* Nested Items - Sirf open state mein dikhenge */}
+        <Collapse in={open && openReports} timeout="auto" unmountOnExit>
+          <List component="div" disablePadding>
+            <ListItemButton sx={{ pl: 4 }} onClick={() => navigate('/reports')} selected={location.pathname === '/reports'}>
               <ListItemText primary="Daily Visit Report" />
             </ListItemButton>
-
-            {/* Summary Report */}
-            <ListItemButton 
-              sx={{ pl: 3.5 }} 
-              onClick={() => navigate('/summary-reports')} 
-              selected={location.pathname === '/summary-reports'}
-            >
-              
+            <ListItemButton sx={{ pl: 4 }} onClick={() => navigate('/summary-reports')} selected={location.pathname === '/summary-reports'}>
               <ListItemText primary="Summary Visit Report" />
             </ListItemButton>
-
-
-             {/* Meter Reading Report */}
-            <ListItemButton 
-              sx={{ pl: 3.5 }} 
-              onClick={() => navigate('/meter-reading-reports')} 
-              selected={location.pathname === '/meter-reading-reports'}
-            >
-              
+            <ListItemButton sx={{ pl: 4 }} onClick={() => navigate('/meter-reading-reports')} selected={location.pathname === '/meter-reading-reports'}>
               <ListItemText primary="Meter Reading Report" />
             </ListItemButton>
-
           </List>
         </Collapse>
       </List>

@@ -166,7 +166,7 @@ const Users = () => {
         setError(null);
         try {
             // API call mein pagination parameters bheje
-            const response = await API.get(`/users?page=${page}&limit=${USERS_PER_PAGE}`);
+            const response = await API.get(`/users?page=${page}&limit=${USERS_PER_PAGE}&search=${searchTerm}`);
             console.log("USERSSSSS ......", response.data.users);
 
             // ✅ API Response Parsing Update
@@ -180,7 +180,18 @@ const Users = () => {
         } finally {
             setLoading(false);
         }
-    }, [logout, page]); // Dependency mein 'page' add kiya
+    }, [logout, page , searchTerm]); // Dependency mein 'page' add kiya
+
+
+    useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+        setPage(1); // Nayi search par page 1 par wapis jao
+        fetchUsers();
+    }, 500); // 500ms wait karega typing rukne ka
+
+    return () => clearTimeout(delayDebounceFn);
+}, [searchTerm]); // Sirf searchTerm par trigger hoga
+
 
     // --- 1. Initial Data Fetch ---
     // ✅ UPDATED: Jab 'page' change hoga tab bhi fetchUsers call hoga
@@ -193,7 +204,7 @@ const Users = () => {
         const interval = setInterval(() => {
             console.log("Auto-refreshing user list...");
             fetchUsers();
-        }, 10000); // 30000ms = 30 seconds
+        }, 30000); // 30000ms = 30 seconds
 
         // Component unmount hote waqt interval ko clear karna zaroori hai
         // warna memory leak ho sakti hai
@@ -203,31 +214,7 @@ const Users = () => {
 
 
 
-    // --- 2. Filtering Logic (Role check added back) ---
-    const filteredUsers = useMemo(() => {
-        // Safety check to prevent .map/filter errors
-        const usersToFilter = Array.isArray(originalUsers) ? originalUsers : [];
-
-        if (!searchTerm) {
-            return usersToFilter;
-        }
-
-        const lowerCaseSearch = searchTerm.toLowerCase();
-
-        return usersToFilter.filter(user => {
-            const id = String(user.id || '');
-            const name = user.name || '';
-            const email = user.email || '';
-            const role = user.role || ''; // Role check added
-
-            return (
-                id.includes(lowerCaseSearch) ||
-                name.toLowerCase().includes(lowerCaseSearch) ||
-                email.toLowerCase().includes(lowerCaseSearch) ||
-                role.toLowerCase().includes(lowerCaseSearch) // Filtering by role
-            );
-        });
-    }, [originalUsers, searchTerm]);
+   
 
 
     // --- 3. MODAL & FORM HANDLERS ---
@@ -420,7 +407,7 @@ const Users = () => {
                     </TableHead>
 
                     <TableBody>
-                        {filteredUsers.map((user, index) => (
+                        {originalUsers.map((user, index) => (
                             <TableRow
                                 key={user.id}
                                 hover
