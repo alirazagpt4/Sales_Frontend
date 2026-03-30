@@ -125,7 +125,7 @@ const MeterReadingReport = () => {
                             disabled={fetchingUsers}
                             SelectProps={{ displayEmpty: true, renderValue: (val) => val || "Select Person" }}
                         >
-                            {users.map((u) => <MenuItem key={u.id} value={u.name}>{u.name}</MenuItem>)}
+                            {users.map((u) => <MenuItem key={u.id} value={u.name}>{u.fullname}</MenuItem>)}
                         </TextField>
                     </Grid>
                     <Grid item xs={12} sm={3}>

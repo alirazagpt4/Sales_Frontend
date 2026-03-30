@@ -250,7 +250,7 @@ const Reports = () => {
                             SelectProps={{ displayEmpty: true, renderValue: (val) => val || <span style={{ color: '#aaa' }}>Select Sales Person</span> }}
                         >
                             <MenuItem value="" disabled>Select Sales Person</MenuItem>
-                            {users.map((u) => <MenuItem key={u.id} value={u.name}>{u.name}</MenuItem>)}
+                            {users.map((u) => <MenuItem key={u.id} value={u.name}>{u.fullname}</MenuItem>)}
                         </TextField>
                     </Grid>
 
@@ -361,8 +361,8 @@ const Reports = () => {
                                 <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>Type</TableCell>
                                 <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>Customer Name</TableCell>
                                 <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>Tehsil</TableCell>
-                                <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>City</TableCell>
-                                <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>Region</TableCell>
+                                {/* <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>City</TableCell> */}
+                                {/* <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>Region</TableCell> */}
                                 <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>Visit Purpose</TableCell>
                                 <TableCell sx={{
                                     fontWeight: 'bold',
@@ -403,8 +403,8 @@ const Reports = () => {
                                         <TableCell sx={{ border: '1px solid #ddd' }}>{visit?.type || "-"}</TableCell>
                                         <TableCell sx={{ border: '1px solid #ddd' }}>{visit?.customer_name || (isOnLeave && vIndex === 0 ? "--" : "-")}</TableCell>
                                         <TableCell sx={{ border: '1px solid #ddd' }}>{visit?.tehsil || "-"}</TableCell>
-                                        <TableCell sx={{ border: '1px solid #ddd' }}>{visit?.city || "-"}</TableCell>
-                                        <TableCell sx={{ border: '1px solid #ddd' }}>{visit?.region || "-"}</TableCell>
+                                        {/* <TableCell sx={{ border: '1px solid #ddd' }}>{visit?.city || "-"}</TableCell> */}
+                                        {/* <TableCell sx={{ border: '1px solid #ddd' }}>{visit?.region || "-"}</TableCell> */}
                                         <TableCell sx={{ border: '1px solid #ddd' }}>{visit ? getVisitPurposeLabel(visit.visit_purpose) : "-"}</TableCell>
                                         <TableCell sx={{ border: '1px solid #ddd', textAlign: 'center' }}>{visit?.bags_potential || "-"}</TableCell>
 
