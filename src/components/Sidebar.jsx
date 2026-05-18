@@ -118,6 +118,9 @@ const Sidebar = ({ drawerWidth, open }) => {
             <ListItemButton sx={{ pl: 4 }} onClick={() => navigate('/meter-reading-reports')} selected={location.pathname === '/meter-reading-reports'}>
               <ListItemText primary="Meter Reading Report" />
             </ListItemButton>
+            <ListItemButton sx={{ pl: 4 }} onClick={() => navigate('/visit-verification-reports')} selected={location.pathname === '/visit-verification-reports'}>
+              <ListItemText primary="Visit Verification Report" />
+            </ListItemButton>
           </List>
         </Collapse>
       </List>

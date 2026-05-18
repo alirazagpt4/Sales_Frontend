@@ -17,6 +17,7 @@ import SummaryReports from './pages/SummaryReports';
 import Items from './pages/Items';
 import SaleOrder from './pages/SaleOrder';
 import MeterReadingReport from './pages/MeterReadingReports';
+import VisitVerificationReport from './pages/VisitVerificationReport';
 
 function App() {
   // useAuth Hook se values lein. Aapke AuthProvider mein loading state hai.
@@ -58,6 +59,7 @@ function App() {
             <Route path="items" element={<Items />} />
             <Route path="sale-orders" element={<SaleOrder />} />
             <Route path="meter-reading-reports" element={<MeterReadingReport />} />
+            <Route path="visit-verification-reports" element={<VisitVerificationReport />} />
           </Route>
         ) : (
           // Agar user logged in nahi hai aur kisi protected route par jane ki koshish kare, toh Login par redirect kar do

@@ -73,21 +73,115 @@ const SummaryReports = () => {
         }
     };
 
-    const exportSummaryToExcel = () => {
-        if (!reportData) return;
-        const excelData = [];
-        const headers = ["Visit Date", "Sales Person", "Region", "Total Visits", "Regular", "Follow-up", "Mature Order", "Meter Reading"];
-        excelData.push(headers);
-        reportData.report.forEach(day => {
-            day.data.forEach(row => {
-                excelData.push([formatForDisplay(day.visit_date), row.sales_person, row.region, row.total_visits, row.regular_visit, row.followup_visit, row.mature_order, row.meter_reading]);
-            });
-        });
-        const ws = XLSX.utils.aoa_to_sheet(excelData);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Summary");
-        XLSX.writeFile(wb, `Summary_Report.xlsx`);
+   const exportSummaryToExcel = () => {
+    if (!reportData) return;
+
+    const excelData = [];
+    const merges = [];
+    let currentRow = 0;
+
+    // 1. Header Style (Green with White Text)
+    const headerStyle = {
+        fill: { fgColor: { rgb: "2E7D32" } },
+        font: { color: { rgb: "FFFFFF" }, bold: true },
+        alignment: { horizontal: "center", vertical: "center" },
+        border: {
+            top: { style: "thin" }, bottom: { style: "thin" },
+            left: { style: "thin" }, right: { style: "thin" }
+        }
     };
+
+    // 2. Data Cell Style (Center Aligned for Merged Dates)
+    const centerStyle = {
+        alignment: { horizontal: "center", vertical: "center" },
+        border: {
+            top: { style: "thin" }, bottom: { style: "thin" },
+            left: { style: "thin" }, right: { style: "thin" }
+        }
+    };
+
+    // 3. Regular Data Style (For Names and Numbers)
+    const regularStyle = {
+        alignment: { vertical: "center" },
+        border: {
+            top: { style: "thin" }, bottom: { style: "thin" },
+            left: { style: "thin" }, right: { style: "thin" }
+        }
+    };
+
+    const headers = [
+        "Visit Date", "Sales Person", "Region", "Total Visits", 
+        "Regular", "Follow-up", "Mature Order", "Meter Reading"
+    ];
+
+    // Push Styled Headers
+    excelData.push(headers.map(h => ({ v: h, s: headerStyle })));
+    currentRow++;
+
+    reportData.report.forEach((day) => {
+        const startRow = currentRow;
+
+        day.data.forEach((row) => {
+            excelData.push([
+                { v: formatForDisplay(day.visit_date), s: centerStyle },
+                { v: row.sales_person, s: regularStyle },
+                { v: row.region, s: regularStyle },
+                { v: row.total_visits, s: { ...regularStyle, alignment: { horizontal: "center" } } },
+                { v: row.regular_visit, s: { ...regularStyle, alignment: { horizontal: "center" } } },
+                { v: row.followup_visit, s: { ...regularStyle, alignment: { horizontal: "center" } } },
+                { v: row.mature_order, s: { ...regularStyle, alignment: { horizontal: "center" } } },
+                { v: row.meter_reading || "N/A", s: regularStyle }
+            ]);
+            currentRow++;
+        });
+
+        // 4. Daily Total Row (Styled like Image 8)
+        const totalRowStyle = {
+            fill: { fgColor: { rgb: "E8F5E9" } }, // Light green
+            font: { bold: true },
+            alignment: { vertical: "center" },
+            border: { top: { style: "thin" }, bottom: { style: "thin" } }
+        };
+
+        excelData.push([
+            { v: "Total Sales Persons:", s: totalRowStyle },
+            { v: day.data.length, s: totalRowStyle },
+            { v: "", s: totalRowStyle },
+            { v: day.date_summary.visits, s: { ...totalRowStyle, alignment: { horizontal: "center" } } },
+            { v: day.date_summary.reg, s: { ...totalRowStyle, alignment: { horizontal: "center" } } },
+            { v: day.date_summary.fol, s: { ...totalRowStyle, alignment: { horizontal: "center" } } },
+            { v: day.date_summary.mat, s: { ...totalRowStyle, alignment: { horizontal: "center" } } },
+            { v: "", s: totalRowStyle }
+        ]);
+
+        // Merge Date Column
+        merges.push({
+            s: { r: startRow, c: 0 },
+            e: { r: currentRow, c: 0 } // currentRow tak merge taake Total row bhi cover ho
+        });
+        
+        currentRow++;
+    });
+
+    const ws = XLSX.utils.aoa_to_sheet(excelData);
+    ws['!merges'] = merges;
+
+    // 5. FIXED: Column Widths (Wch is character count)
+    ws['!cols'] = [
+        { wch: 18 }, // Visit Date
+        { wch: 30 }, // Sales Person (Names will show fully now)
+        { wch: 20 }, // Region
+        { wch: 15 }, // Total Visits
+        { wch: 12 }, // Regular
+        { wch: 12 }, // Follow-up
+        { wch: 15 }, // Mature Order
+        { wch: 15 }  // Meter Reading
+    ];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Summary Report");
+    XLSX.writeFile(wb, `Summary_Report_${fromDate}_to_${toDate}.xlsx`);
+};
 
     return (
         <Box >
