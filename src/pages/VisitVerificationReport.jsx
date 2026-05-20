@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import {
     Typography, Box, TextField, Button, Grid, Paper,
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-    CircularProgress, Alert, Divider, MenuItem
+    CircularProgress, Alert, Divider, MenuItem, IconButton, Tooltip
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import DownloadIcon from '@mui/icons-material/Download';
@@ -14,91 +14,6 @@ const formatForDisplay = (dateString) => {
     if (!dateString) return "";
     const options = { month: 'short', day: 'numeric', year: 'numeric' };
     return new Date(dateString).toLocaleDateString('en-US', options);
-};
-
-// Global Memory Cache for Geocoding to optimize performance O(1) and bypass rate-limits
-const geocodeCache = {};
-
-const LocationName = ({ coords, index }) => {
-    const [address, setAddress] = useState('Fetching Area...');
-
-    useEffect(() => {
-        if (!coords || coords.lat === null || coords.lng === null || coords.lat === undefined || coords.lng === undefined) {
-            setAddress('Unknown Location');
-            return;
-        }
-
-        const cacheKey = `${Number(coords.lat).toFixed(5)},${Number(coords.lng).toFixed(5)}`;
-        
-        // Hit Cache if available
-        if (geocodeCache[cacheKey]) {
-            setAddress(geocodeCache[cacheKey]);
-            return;
-        }
-
-        let isMounted = true;
-
-        const fetchAddress = async () => {
-            try {
-                const response = await fetch(
-                    `https://nominatim.openstreetmap.org/reverse?format=json&lat=${coords.lat}&lon=${coords.lng}&zoom=18&addressdetails=1`,
-                    { 
-                        headers: { 
-                            'Accept': 'application/json',
-                            'User-Agent': 'CoreConnectSalesLogProcessor/2.0 (Production Verification Tool)' 
-                        } 
-                    }
-                );
-                
-                if (!response.ok) throw new Error("Rate Limited");
-                const data = await response.json();
-                
-                if (isMounted) {
-                    if (data && data.address) {
-                        const addr = data.address;
-                        
-                        // Strict Pakistan Local Area Extraction Hierarchy
-                        let areaName = addr.road || addr.suburb || addr.neighbourhood || addr.city_district || addr.town || addr.village || addr.city;
-                        
-                        if (!areaName && data.display_name) {
-                            // Deep parsing: extract human readable string chunks if specific tags are missing
-                            const parts = data.display_name.split(',');
-                            areaName = parts.length > 1 ? `${parts[0].trim()}, ${parts[1].trim()}` : parts[0];
-                        }
-
-                        const finalArea = areaName || 'Active Business Area';
-                        geocodeCache[cacheKey] = finalArea; // Cache set
-                        setAddress(finalArea);
-                    } else if (data && data.display_name) {
-                        const parts = data.display_name.split(',');
-                        const finalArea = parts[0] || 'Business Zone';
-                        geocodeCache[cacheKey] = finalArea;
-                        setAddress(finalArea);
-                    } else {
-                        setAddress('Business Zone');
-                    }
-                }
-            } catch (err) {
-                if (isMounted) {
-                    // Coordinates strict ban policy. If API fails, show generic area instead of numbers.
-                    setAddress('Location Logged');
-                }
-            }
-        };
-
-        // Staggered Request Queue: Add incremental delay based on row index to prevent concurrent blockings
-        const staggeredDelay = (index % 10) * 350; 
-        const timer = setTimeout(() => {
-            fetchAddress();
-        }, staggeredDelay);
-
-        return () => { 
-            isMounted = false; 
-            clearTimeout(timer);
-        };
-    }, [coords, index]);
-
-    return <Typography variant="body2" sx={{ fontWeight: 'medium' }}>{address}</Typography>;
 };
 
 const VisitVerificationReport = () => {
@@ -182,9 +97,6 @@ const VisitVerificationReport = () => {
     };
 
     const filteredReportPayload = getFilteredReport();
-
-    // Flatten array to assign distinct incremental sequential indexes for API throttling
-    let globalVisitCounter = 0;
 
     const exportToExcel = () => {
         if (filteredReportPayload.length === 0) return;
@@ -272,8 +184,8 @@ const VisitVerificationReport = () => {
     };
 
     return (
-        <Box >
-            <Typography variant="h5" sx={{  mb: 1 }}>Visit Verification Detailed Report</Typography>
+        <Box>
+            <Typography variant="h5" sx={{ mb: 1 }}>Visit Verification Detailed Report</Typography>
             <Divider sx={{ mb: 3 }} />
 
             <Paper variant="outlined" sx={{ p: 2, mb: 3, borderTop: '3px solid #2e7d32' }}>
@@ -282,7 +194,7 @@ const VisitVerificationReport = () => {
                         <TextField 
                             select 
                             size="small" 
-                            sx={{width:'220px'}}
+                            sx={{ width: '220px' }}
                             label="Sales Person" 
                             value={selectedUsername}
                             onChange={(e) => setSelectedUsername(e.target.value)} 
@@ -400,10 +312,10 @@ const VisitVerificationReport = () => {
                                 <TableCell sx={{ fontWeight: 'bold' }}>Visit Date</TableCell>
                                 <TableCell sx={{ fontWeight: 'bold' }}>Sales Person</TableCell>
                                 <TableCell sx={{ fontWeight: 'bold' }}>Customer Name</TableCell>
-                                <TableCell sx={{ fontWeight: 'bold' }}>Customer Location</TableCell>
-                                <TableCell sx={{ fontWeight: 'bold' }}>Visit Location</TableCell>
+                                <TableCell align="center" sx={{ fontWeight: 'bold' }}>Customer Location</TableCell>
+                                <TableCell align="center" sx={{ fontWeight: 'bold' }}>Visit Location</TableCell>
                                 <TableCell sx={{ fontWeight: 'bold' }}>Distance</TableCell>
-                                <TableCell align="center" sx={{ fontWeight: 'bold' }}>Verfication Status</TableCell>
+                                <TableCell align="center" sx={{ fontWeight: 'bold' }}>Verification Status</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
@@ -416,10 +328,11 @@ const VisitVerificationReport = () => {
                                             const normalizedStatus = (row.verification_status || '').toLowerCase();
                                             const isVerified = normalizedStatus === 'verified';
                                             
-                                            // Assign a continuous flat sequence id to correctly space network calls
-                                            const currentVisitIndex = globalVisitCounter;
-                                            globalVisitCounter++;
-                                            
+                                            const cLat = row.customer_coordinates?.lat;
+                                            const cLng = row.customer_coordinates?.lng;
+                                            const uLat = row.user_coordinates?.lat;
+                                            const uLng = row.user_coordinates?.lng;
+
                                             return (
                                                 <TableRow key={`${dIndex}-${rIndex}`} hover>
                                                     {rIndex === 0 && (
@@ -435,18 +348,44 @@ const VisitVerificationReport = () => {
                                                     </TableCell>
                                                     <TableCell>{row.customer_name || "N/A"}</TableCell>
                                                     
-                                                    <TableCell>
-                                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                                            <LocationOnIcon sx={{ color: '#d32f2f' }} fontSize="small" />
-                                                            <LocationName coords={row.customer_coordinates} index={currentVisitIndex} />
-                                                        </Box>
+                                                    {/* Customer Location Link */}
+                                                    <TableCell align="center">
+                                                        {cLat && cLng ? (
+                                                            <Tooltip title="Open Customer Location on Google Maps">
+                                                                <IconButton 
+                                                                    component="a" 
+                                                                    href={`https://www.google.com/maps/search/?api=1&query=${cLat},${cLng}`}
+                                                                    target="_blank" 
+                                                                    rel="noopener noreferrer"
+                                                                    aria-label={`View customer coordinates ${cLat}, ${cLng} on Google Maps`}
+                                                                    size="small"
+                                                                >
+                                                                    <LocationOnIcon sx={{ color: '#d32f2f' }} />
+                                                                </IconButton>
+                                                            </Tooltip>
+                                                        ) : (
+                                                            <Typography variant="body2" color="textSecondary">N/A</Typography>
+                                                        )}
                                                     </TableCell>
 
-                                                    <TableCell>
-                                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                                            <LocationOnIcon sx={{ color: '#1976d2' }} fontSize="small" />
-                                                            <LocationName coords={row.user_coordinates} index={currentVisitIndex + 1} />
-                                                        </Box>
+                                                    {/* User Visit Location Link */}
+                                                    <TableCell align="center">
+                                                        {uLat && uLng ? (
+                                                            <Tooltip title="Open Visit Location on Google Maps">
+                                                                <IconButton 
+                                                                    component="a" 
+                                                                    href={`https://www.google.com/maps/search/?api=1&query=${uLat},${uLng}`}
+                                                                    target="_blank" 
+                                                                    rel="noopener noreferrer"
+                                                                    aria-label={`View sales person coordinates ${uLat}, ${uLng} on Google Maps`}
+                                                                    size="small"
+                                                                >
+                                                                    <LocationOnIcon sx={{ color: '#1976d2' }} />
+                                                                </IconButton>
+                                                            </Tooltip>
+                                                        ) : (
+                                                            <Typography variant="body2" color="textSecondary">N/A</Typography>
+                                                        )}
                                                     </TableCell>
 
                                                     <TableCell sx={{ fontWeight: 'medium' }}>
