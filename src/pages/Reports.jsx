@@ -120,7 +120,8 @@ const Reports = () => {
         const mapping = {
             'New': 'Customer Regular Visit',
             'Old': 'Follow Up Visit',
-            'Mature': 'Mature Order'
+            'Mature': 'Mature Order',
+            'NewPotentialCustomer': 'New Potential Customer'
         };
         return mapping[purpose] || purpose; // Agar koi naya code ho toh wahi dikha de
     };
@@ -328,19 +329,52 @@ const Reports = () => {
                             <Divider orientation="vertical" flexItem sx={{ mx: 1, height: '30px', alignSelf: 'center' }} />
 
                             {/* Counts - Wahi purana style Pill wala */}
-                            <Box sx={{ display: 'flex', gap: 1 }}>
-                                <Box sx={{ bgcolor: '#e8f5e9', px: 1.5, py: 0.5, borderRadius: '20px', border: '1px solid #c8e6c9' }}>
-                                    <Typography variant="caption" sx={{ color: '#2e7d32', fontWeight: 'bold' }}>Total: {reportData.meta.total_visits}</Typography>
+                            <Box
+                                sx={{
+                                    display: 'flex',
+                                    flexDirection: 'row',
+                                    flexWrap: 'nowrap',       // 🔴 Force karega ke saare badges ek hi line mein rahein, niche break na hon
+                                    alignItems: 'center',
+                                    gap: 0.75,                // Space thoda tight (6px) kiya taake screen par poora aaye
+                                    width: '100%'
+                                }}
+                            >
+                                {/* Total Visits Badge */}
+                                <Box sx={{ bgcolor: '#e8f5e9', px: 1.2, py: 0.4, borderRadius: '12px', border: '1px solid #c8e6c9', whiteSpace: 'nowrap' }}>
+                                    <Typography variant="caption" sx={{ color: '#2e7d32', fontWeight: 'bold', fontSize: '0.75rem' }}>
+                                        Total: {reportData.meta.total_visits}
+                                    </Typography>
                                 </Box>
-                                <Box sx={{ bgcolor: '#e3f2fd', px: 1.5, py: 0.5, borderRadius: '20px', border: '1px solid #bbdefb' }}>
-                                    <Typography variant="caption" sx={{ color: '#1976d2', fontWeight: 'bold' }}>New: {reportData.meta.new || 0}</Typography>
+
+                                {/* New Potential Customer Badge (🔴 Mapping Error Handled) */}
+                                <Box sx={{ bgcolor: '#efebe9', px: 1.2, py: 0.4, borderRadius: '12px', border: '1px solid #d7ccc8', whiteSpace: 'nowrap' }}>
+                                    <Typography variant="caption" sx={{ color: '#5d4037', fontWeight: 'bold', fontSize: '0.75rem' }}>
+                                            New Potential Customer : {reportData.meta.newPotentialCustomer || 0}
+                                    </Typography>
                                 </Box>
-                                <Box sx={{ bgcolor: '#e3f2fd', px: 1.5, py: 0.5, borderRadius: '20px', border: '1px solid #bbdefb' }}>
-                                    <Typography variant="caption" sx={{ color: '#1976d2', fontWeight: 'bold' }}>Old: {reportData.meta.old || 0}</Typography>
+
+                                {/* New Visits Badge */}
+                                <Box sx={{ bgcolor: '#e3f2fd', px: 1.2, py: 0.4, borderRadius: '12px', border: '1px solid #bbdefb', whiteSpace: 'nowrap' }}>
+                                    <Typography variant="caption" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '0.75rem' }}>
+                                        Regular: {reportData.meta.new || 0}
+                                    </Typography>
                                 </Box>
-                                <Box sx={{ bgcolor: '#e3f2fd', px: 1.5, py: 0.5, borderRadius: '20px', border: '1px solid #bbdefb' }}>
-                                    <Typography variant="caption" sx={{ color: '#1976d2', fontWeight: 'bold' }}>Mature: {reportData.meta.mature || 0}</Typography>
+
+                                {/* Old Visits Badge */}
+                                <Box sx={{ bgcolor: '#e3f2fd', px: 1.2, py: 0.4, borderRadius: '12px', border: '1px solid #bbdefb', whiteSpace: 'nowrap' }}>
+                                    <Typography variant="caption" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '0.75rem' }}>
+                                        Follow Up: {reportData.meta.old || 0}
+                                    </Typography>
                                 </Box>
+
+                                {/* Mature Visits Badge */}
+                                <Box sx={{ bgcolor: '#e3f2fd', px: 1.2, py: 0.4, borderRadius: '12px', border: '1px solid #bbdefb', whiteSpace: 'nowrap' }}>
+                                    <Typography variant="caption" sx={{ color: '#1976d2', fontWeight: 'bold', fontSize: '0.75rem' }}>
+                                        Mature: {reportData.meta.mature || 0}
+                                    </Typography>
+                                </Box>
+
+                                
                             </Box>
                         </Box>
 

@@ -16,10 +16,10 @@ const formatForDisplay = (dateString) => {
 };
 
 const regionsList = [
-    "Gojra", "Sargodha", "Jhang", "South", "Rahim Yar Khan", 
-    "Layyah", "Sahiwal", "Narowal", "Pindi Bhattian", 
-    "Gujranwala", "Multan", "Bahawalpur", "Khanewal", 
-    "Jaranwala", "Rawalpindi"
+    "Gojra", "Sargodha", "Jhang", "South", "Rahim Yar Khan",
+    "Layyah", "Sahiwal", "Narowal", "Pindi Bhattian",
+    "Gujranwala", "Multan", "Bahawalpur", "Khanewal",
+    "Jaranwala", "Rawalpindi", "KPK"
 ];
 
 const SummaryReports = () => {
@@ -73,221 +73,225 @@ const SummaryReports = () => {
         }
     };
 
-   const exportSummaryToExcel = () => {
-    if (!reportData) return;
+    const exportSummaryToExcel = () => {
+        if (!reportData) return;
 
-    const excelData = [];
-    const merges = [];
-    let currentRow = 0;
+        const excelData = [];
+        const merges = [];
+        let currentRow = 0;
 
-    // 1. Header Style (Green with White Text)
-    const headerStyle = {
-        fill: { fgColor: { rgb: "2E7D32" } },
-        font: { color: { rgb: "FFFFFF" }, bold: true },
-        alignment: { horizontal: "center", vertical: "center" },
-        border: {
-            top: { style: "thin" }, bottom: { style: "thin" },
-            left: { style: "thin" }, right: { style: "thin" }
-        }
-    };
+        // 1. Header Style (Green with White Text)
+        const headerStyle = {
+            fill: { fgColor: { rgb: "2E7D32" } },
+            font: { color: { rgb: "FFFFFF" }, bold: true },
+            alignment: { horizontal: "center", vertical: "center" },
+            border: {
+                top: { style: "thin" }, bottom: { style: "thin" },
+                left: { style: "thin" }, right: { style: "thin" }
+            }
+        };
 
-    // 2. Data Cell Style (Center Aligned for Merged Dates)
-    const centerStyle = {
-        alignment: { horizontal: "center", vertical: "center" },
-        border: {
-            top: { style: "thin" }, bottom: { style: "thin" },
-            left: { style: "thin" }, right: { style: "thin" }
-        }
-    };
+        // 2. Data Cell Style (Center Aligned for Merged Dates)
+        const centerStyle = {
+            alignment: { horizontal: "center", vertical: "center" },
+            border: {
+                top: { style: "thin" }, bottom: { style: "thin" },
+                left: { style: "thin" }, right: { style: "thin" }
+            }
+        };
 
-    // 3. Regular Data Style (For Names and Numbers)
-    const regularStyle = {
-        alignment: { vertical: "center" },
-        border: {
-            top: { style: "thin" }, bottom: { style: "thin" },
-            left: { style: "thin" }, right: { style: "thin" }
-        }
-    };
+        // 3. Regular Data Style (For Names and Numbers)
+        const regularStyle = {
+            alignment: { vertical: "center" },
+            border: {
+                top: { style: "thin" }, bottom: { style: "thin" },
+                left: { style: "thin" }, right: { style: "thin" }
+            }
+        };
 
-    const headers = [
-        "Visit Date", "Sales Person", "Region", "Total Visits", 
-        "Regular", "Follow-up", "Mature Order", "Meter Reading"
-    ];
+        const headers = [
+            "Visit Date", "Sales Person", "Region", "Total Visits",
+            "Regular", "Follow-up", "Mature Order", "New Potential Customer", "Meter Reading"
+        ];
 
-    // Push Styled Headers
-    excelData.push(headers.map(h => ({ v: h, s: headerStyle })));
-    currentRow++;
+        // Push Styled Headers
+        excelData.push(headers.map(h => ({ v: h, s: headerStyle })));
+        currentRow++;
 
-    reportData.report.forEach((day) => {
-        const startRow = currentRow;
+        reportData.report.forEach((day) => {
+            const startRow = currentRow;
 
-        day.data.forEach((row) => {
+            day.data.forEach((row) => {
+                excelData.push([
+                    { v: formatForDisplay(day.visit_date), s: centerStyle },
+                    { v: row.sales_person, s: regularStyle },
+                    { v: row.region, s: regularStyle },
+                    { v: row.total_visits, s: { ...regularStyle, alignment: { horizontal: "center" } } },
+                    { v: row.regular_visit, s: { ...regularStyle, alignment: { horizontal: "center" } } },
+                    { v: row.followup_visit, s: { ...regularStyle, alignment: { horizontal: "center" } } },
+                    { v: row.mature_order, s: { ...regularStyle, alignment: { horizontal: "center" } } },
+                    { v: row.newPotentialCustomer_visit, s: { ...regularStyle, alignment: { horizontal: "center" } } },
+
+                    { v: row.meter_reading || "N/A", s: regularStyle }
+                ]);
+                currentRow++;
+            });
+
+            // 4. Daily Total Row (Styled like Image 8)
+            const totalRowStyle = {
+                fill: { fgColor: { rgb: "E8F5E9" } }, // Light green
+                font: { bold: true },
+                alignment: { vertical: "center" },
+                border: { top: { style: "thin" }, bottom: { style: "thin" } }
+            };
+
             excelData.push([
-                { v: formatForDisplay(day.visit_date), s: centerStyle },
-                { v: row.sales_person, s: regularStyle },
-                { v: row.region, s: regularStyle },
-                { v: row.total_visits, s: { ...regularStyle, alignment: { horizontal: "center" } } },
-                { v: row.regular_visit, s: { ...regularStyle, alignment: { horizontal: "center" } } },
-                { v: row.followup_visit, s: { ...regularStyle, alignment: { horizontal: "center" } } },
-                { v: row.mature_order, s: { ...regularStyle, alignment: { horizontal: "center" } } },
-                { v: row.meter_reading || "N/A", s: regularStyle }
+                { v: "Total Sales Persons:", s: totalRowStyle },
+                { v: day.data.length, s: totalRowStyle },
+                { v: "", s: totalRowStyle },
+                { v: day.date_summary.visits, s: { ...totalRowStyle, alignment: { horizontal: "center" } } },
+                { v: day.date_summary.reg, s: { ...totalRowStyle, alignment: { horizontal: "center" } } },
+                { v: day.date_summary.fol, s: { ...totalRowStyle, alignment: { horizontal: "center" } } },
+                { v: day.date_summary.mat, s: { ...totalRowStyle, alignment: { horizontal: "center" } } },
+                { v: day.date_summary.npc, s: { ...totalRowStyle, alignment: { horizontal: "center" } } },
+                { v: "", s: totalRowStyle }
             ]);
+
+            // Merge Date Column
+            merges.push({
+                s: { r: startRow, c: 0 },
+                e: { r: currentRow, c: 0 } // currentRow tak merge taake Total row bhi cover ho
+            });
+
             currentRow++;
         });
 
-        // 4. Daily Total Row (Styled like Image 8)
-        const totalRowStyle = {
-            fill: { fgColor: { rgb: "E8F5E9" } }, // Light green
-            font: { bold: true },
-            alignment: { vertical: "center" },
-            border: { top: { style: "thin" }, bottom: { style: "thin" } }
-        };
+        const ws = XLSX.utils.aoa_to_sheet(excelData);
+        ws['!merges'] = merges;
 
-        excelData.push([
-            { v: "Total Sales Persons:", s: totalRowStyle },
-            { v: day.data.length, s: totalRowStyle },
-            { v: "", s: totalRowStyle },
-            { v: day.date_summary.visits, s: { ...totalRowStyle, alignment: { horizontal: "center" } } },
-            { v: day.date_summary.reg, s: { ...totalRowStyle, alignment: { horizontal: "center" } } },
-            { v: day.date_summary.fol, s: { ...totalRowStyle, alignment: { horizontal: "center" } } },
-            { v: day.date_summary.mat, s: { ...totalRowStyle, alignment: { horizontal: "center" } } },
-            { v: "", s: totalRowStyle }
-        ]);
+        // 5. FIXED: Column Widths (Wch is character count)
+        ws['!cols'] = [
+            { wch: 18 }, // Visit Date
+            { wch: 30 }, // Sales Person (Names will show fully now)
+            { wch: 20 }, // Region
+            { wch: 15 }, // Total Visits
+            { wch: 12 }, // Regular
+            { wch: 12 }, // Follow-up
+            { wch: 15 }, // Mature Order
+            { wch: 15 },
+            { wch: 15 }  // Meter Reading
+        ];
 
-        // Merge Date Column
-        merges.push({
-            s: { r: startRow, c: 0 },
-            e: { r: currentRow, c: 0 } // currentRow tak merge taake Total row bhi cover ho
-        });
-        
-        currentRow++;
-    });
-
-    const ws = XLSX.utils.aoa_to_sheet(excelData);
-    ws['!merges'] = merges;
-
-    // 5. FIXED: Column Widths (Wch is character count)
-    ws['!cols'] = [
-        { wch: 18 }, // Visit Date
-        { wch: 30 }, // Sales Person (Names will show fully now)
-        { wch: 20 }, // Region
-        { wch: 15 }, // Total Visits
-        { wch: 12 }, // Regular
-        { wch: 12 }, // Follow-up
-        { wch: 15 }, // Mature Order
-        { wch: 15 }  // Meter Reading
-    ];
-
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Summary Report");
-    XLSX.writeFile(wb, `Summary_Report_${fromDate}_to_${toDate}.xlsx`);
-};
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Summary Report");
+        XLSX.writeFile(wb, `Summary_Report_${fromDate}_to_${toDate}.xlsx`);
+    };
 
     return (
         <Box >
             <Typography variant="h5" >Summary Visit Reports</Typography>
             <Divider sx={{ mb: 3 }} />
 
-           {/* Inputs Divided into 2 Rows with Proper Breakpoints */}
-<Paper variant="outlined" sx={{ p: 2, mb: 3, borderTop: '3px solid #2e7d32' }}>
-    <Grid container spacing={2}>
-        
-        {/* Row 1: From Date, To Date, Region */}
-        <Grid item xs={12} sm={6} md={4}>
-            <TextField 
-                size="small" 
-                 sx={{ width: "230px" }}
-                type="date" 
-                label="From Date" 
-                InputLabelProps={{ shrink: true }}
-                value={fromDate} 
-                onChange={(e) => setFromDate(e.target.value)} 
-            />
-        </Grid>
-        <Grid item xs={12} sm={6} md={4}>
-            <TextField 
-                size="small" 
-                 sx={{ width: "230px" }}
-                type="date" 
-                label="To Date" 
-                InputLabelProps={{ shrink: true }}
-                value={toDate} 
-                onChange={(e) => setToDate(e.target.value)} 
-            />
-        </Grid>
-        <Grid item xs={12} md={4}>
-            <TextField 
-                select 
-                size="small" 
-                fullWidth
-                 sx={{ width: "230px" }}
-                label="Region" 
-                value={region} 
-                onChange={(e) => setRegion(e.target.value)}
-            >
-                <MenuItem value="">All Regions</MenuItem>
-                {regionsList.sort().map((r) => (
-                    <MenuItem key={r} value={r}>{r}</MenuItem>
-                ))}
-            </TextField>
-        </Grid>
+            {/* Inputs Divided into 2 Rows with Proper Breakpoints */}
+            <Paper variant="outlined" sx={{ p: 2, mb: 3, borderTop: '3px solid #2e7d32' }}>
+                <Grid container spacing={2}>
 
-        {/* Row 2: Sales Person and Action Buttons */}
-        <Grid item xs={12} md={6} lg={6}>
-            <TextField 
-                select 
-                size="small" 
-                sx={{ width: "230px" }}
-                label="Sales Person" 
-                value={selectedUserId}
-                onChange={(e) => setSelectedUserId(e.target.value)} 
-                disabled={fetchingUsers}
-            >
-                <MenuItem value=""><em>All Sales Persons</em></MenuItem>
-                {users.map((u) => (
-                    <MenuItem key={u.id} value={u.id}>{u.fullname}</MenuItem>
-                ))}
-            </TextField>
-        </Grid>
-        
-        <Grid item xs={12} sm={6} md={3} lg={3}>
-            <Button 
-                variant="contained" 
-                fullWidth 
-                startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <SearchIcon />}
-                onClick={fetchReport} 
-                sx={{ 
-                    bgcolor: '#2e7d32', 
-                    '&:hover': { bgcolor: '#1b5e20' }, 
-                    height: '40px',
-                    fontWeight: 'bold'
-                }}
-            >
-                GENERATE
-            </Button>
-        </Grid>
-        
-        <Grid item xs={12} sm={6} md={3} lg={3}>
-            <Button 
-                variant="outlined" 
-                fullWidth 
-                startIcon={<DownloadIcon />}
-                onClick={exportSummaryToExcel} 
-                disabled={!reportData}
-                sx={{ 
-                    color: '#2e7d32', 
-                    borderColor: '#2e7d32', 
-                    height: '40px',
-                    fontWeight: 'bold',
-                    '&:hover': { borderColor: '#1b5e20', bgcolor: '#f1f8e9' }
-                }}
-            >
-                EXPORT EXCEL
-            </Button>
-        </Grid>
+                    {/* Row 1: From Date, To Date, Region */}
+                    <Grid item xs={12} sm={6} md={4}>
+                        <TextField
+                            size="small"
+                            sx={{ width: "230px" }}
+                            type="date"
+                            label="From Date"
+                            InputLabelProps={{ shrink: true }}
+                            value={fromDate}
+                            onChange={(e) => setFromDate(e.target.value)}
+                        />
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={4}>
+                        <TextField
+                            size="small"
+                            sx={{ width: "230px" }}
+                            type="date"
+                            label="To Date"
+                            InputLabelProps={{ shrink: true }}
+                            value={toDate}
+                            onChange={(e) => setToDate(e.target.value)}
+                        />
+                    </Grid>
+                    <Grid item xs={12} md={4}>
+                        <TextField
+                            select
+                            size="small"
+                            fullWidth
+                            sx={{ width: "230px" }}
+                            label="Region"
+                            value={region}
+                            onChange={(e) => setRegion(e.target.value)}
+                        >
+                            <MenuItem value="">All Regions</MenuItem>
+                            {regionsList.sort().map((r) => (
+                                <MenuItem key={r} value={r}>{r}</MenuItem>
+                            ))}
+                        </TextField>
+                    </Grid>
 
-    </Grid>
-</Paper>
+                    {/* Row 2: Sales Person and Action Buttons */}
+                    <Grid item xs={12} md={6} lg={6}>
+                        <TextField
+                            select
+                            size="small"
+                            sx={{ width: "230px" }}
+                            label="Sales Person"
+                            value={selectedUserId}
+                            onChange={(e) => setSelectedUserId(e.target.value)}
+                            disabled={fetchingUsers}
+                        >
+                            <MenuItem value=""><em>All Sales Persons</em></MenuItem>
+                            {users.map((u) => (
+                                <MenuItem key={u.id} value={u.id}>{u.fullname}</MenuItem>
+                            ))}
+                        </TextField>
+                    </Grid>
+
+                    <Grid item xs={12} sm={6} md={3} lg={3}>
+                        <Button
+                            variant="contained"
+                            fullWidth
+                            startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <SearchIcon />}
+                            onClick={fetchReport}
+                            sx={{
+                                bgcolor: '#2e7d32',
+                                '&:hover': { bgcolor: '#1b5e20' },
+                                height: '40px',
+                                fontWeight: 'bold'
+                            }}
+                        >
+                            GENERATE
+                        </Button>
+                    </Grid>
+
+                    <Grid item xs={12} sm={6} md={3} lg={3}>
+                        <Button
+                            variant="outlined"
+                            fullWidth
+                            startIcon={<DownloadIcon />}
+                            onClick={exportSummaryToExcel}
+                            disabled={!reportData}
+                            sx={{
+                                color: '#2e7d32',
+                                borderColor: '#2e7d32',
+                                height: '40px',
+                                fontWeight: 'bold',
+                                '&:hover': { borderColor: '#1b5e20', bgcolor: '#f1f8e9' }
+                            }}
+                        >
+                            EXPORT EXCEL
+                        </Button>
+                    </Grid>
+
+                </Grid>
+            </Paper>
 
             {error && <Alert severity="info" sx={{ mb: 2 }}>{error}</Alert>}
 
@@ -304,6 +308,10 @@ const SummaryReports = () => {
                                 <Box sx={{ bgcolor: '#e8f5e9', px: 1.5, py: 0.5, borderRadius: '20px', border: '1px solid #c8e6c9' }}>
                                     <Typography variant="caption" sx={{ color: '#2e7d32', fontWeight: 'bold' }}>Grand Total: {reportData.grand_summary.total_visits}</Typography>
                                 </Box>
+
+                                <Box sx={{ bgcolor: '#efebe9', px: 1.5, py: 0.5, borderRadius: '20px', border: '1px solid #d7ccc8' }}>
+                                    <Typography variant="caption" sx={{ color: '#5d4037', fontWeight: 'bold' }}>New Potential Customer: {reportData.grand_summary.total_newPotentialCustomer}</Typography>
+                                </Box>
                                 <Box sx={{ bgcolor: '#e3f2fd', px: 1.5, py: 0.5, borderRadius: '20px', border: '1px solid #bbdefb' }}>
                                     <Typography variant="caption" sx={{ color: '#1976d2', fontWeight: 'bold' }}>Regular: {reportData.grand_summary.total_regular}</Typography>
                                 </Box>
@@ -313,9 +321,10 @@ const SummaryReports = () => {
                                 <Box sx={{ bgcolor: '#e3f2fd', px: 1.5, py: 0.5, borderRadius: '20px', border: '1px solid #bbdefb' }}>
                                     <Typography variant="caption" sx={{ color: '#1976d2', fontWeight: 'bold' }}>Mature: {reportData.grand_summary.total_mature}</Typography>
                                 </Box>
+
                             </Box>
                         </Box>
-                        
+
                         <Box sx={{ textAlign: 'right' }}>
                             <Typography variant="caption" sx={{ color: '#888', fontWeight: 'bold', display: 'block' }}>PERIOD</Typography>
                             <Box sx={{ bgcolor: '#f1f8e9', px: 1, py: 0.2, borderRadius: '4px' }}>
@@ -333,6 +342,7 @@ const SummaryReports = () => {
                                 <TableCell sx={{ fontWeight: 'bold' }}>Sales Person</TableCell>
                                 <TableCell sx={{ fontWeight: 'bold' }}>Region</TableCell>
                                 <TableCell align="center" sx={{ fontWeight: 'bold' }}>Total Visits</TableCell>
+                                <TableCell align="center" sx={{ fontWeight: 'bold' }}>New Potential Customer</TableCell>
                                 <TableCell align="center" sx={{ fontWeight: 'bold' }}>Regular</TableCell>
                                 <TableCell align="center" sx={{ fontWeight: 'bold' }}>Follow-up</TableCell>
                                 <TableCell align="center" sx={{ fontWeight: 'bold' }}>Mature Order</TableCell>
@@ -352,6 +362,7 @@ const SummaryReports = () => {
                                             <TableCell>{row.sales_person}</TableCell>
                                             <TableCell>{row.region}</TableCell>
                                             <TableCell align="center">{row.total_visits}</TableCell>
+                                            <TableCell align="center">{row.newPotentialCustomer_visit}</TableCell>
                                             <TableCell align="center">{row.regular_visit}</TableCell>
                                             <TableCell align="center">{row.followup_visit}</TableCell>
                                             <TableCell align="center">{row.mature_order}</TableCell>
@@ -369,6 +380,7 @@ const SummaryReports = () => {
                                         <TableCell align="center" sx={{ fontWeight: 'bold' }}>{day.date_summary.reg}</TableCell>
                                         <TableCell align="center" sx={{ fontWeight: 'bold' }}>{day.date_summary.fol}</TableCell>
                                         <TableCell align="center" sx={{ fontWeight: 'bold' }}>{day.date_summary.mat}</TableCell>
+                                        <TableCell align="center" sx={{ fontWeight: 'bold' }}>{day.date_summary.npc}</TableCell>
                                         <TableCell />
                                     </TableRow>
                                 </React.Fragment>
