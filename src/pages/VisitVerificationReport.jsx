@@ -3,7 +3,8 @@ import React, { useState, useEffect } from 'react';
 import {
     Typography, Box, TextField, Button, Grid, Paper,
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-    CircularProgress, Alert, Divider, MenuItem, IconButton, Tooltip
+    CircularProgress, Alert, Divider, MenuItem, Checkbox, ListItemText, Tooltip, IconButton,
+    OutlinedInput, FormControl, InputLabel, Select
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import DownloadIcon from '@mui/icons-material/Download';
@@ -20,7 +21,7 @@ const VisitVerificationReport = () => {
     const [fromDate, setFromDate] = useState(new Date().toISOString().split('T')[0]);
     const [toDate, setToDate] = useState(new Date().toISOString().split('T')[0]);
     const [users, setUsers] = useState([]);
-    const [selectedUsername, setSelectedUsername] = useState('');
+    const [selectedUsernames, setSelectedUsernames] = useState([]);
     const [statusFilter, setStatusFilter] = useState('all');
     const [fetchingUsers, setFetchingUsers] = useState(true);
     const [reportData, setReportData] = useState(null);
@@ -46,22 +47,34 @@ const VisitVerificationReport = () => {
         fetchUsersList();
     }, []);
 
+    const handleUserChange = (event) => {
+        const value = event.target.value;
+        if (value.includes('all_users')) {
+            setSelectedUsernames(selectedUsernames.length === users.length ? [] : ['all_users']);
+            return;
+        }
+        setSelectedUsernames(typeof value === 'string' ? value.split(',') : value);
+    };
+
     const fetchReport = async () => {
         setLoading(true);
         setError(null);
         try {
-            let query = `reports/visit-verification-report`;
             const params = new URLSearchParams();
-            
-            if (selectedUsername) {
-                params.append('name', selectedUsername);
+
+            if (selectedUsernames.length > 0 && !selectedUsernames.includes('all_users')) {
+                selectedUsernames.forEach(username => {
+                    params.append('names[]', username);
+                });
+            } else {
+                params.append('names', 'All');
             }
+
             params.append('fromDate', fromDate);
             params.append('toDate', toDate);
 
-            const finalQuery = `${query}?${params.toString()}`;
-            const response = await API.get(finalQuery);
-            
+            const response = await API.get(`reports/visit-verification-report?${params.toString()}`);
+
             if (response.data && response.data.report && response.data.report.length > 0) {
                 setReportData(response.data);
             } else {
@@ -70,6 +83,7 @@ const VisitVerificationReport = () => {
             }
         } catch (err) {
             setError("Server error fetching verification records.");
+            setReportData(null);
         } finally {
             setLoading(false);
         }
@@ -93,10 +107,21 @@ const VisitVerificationReport = () => {
                 ...day,
                 visits: filteredVisits
             };
-        }).filter(day => day.visits.length > 0);
+        }).filter(day => day.visits.length > 0 || (statusFilter === 'all' && (day.visits || []).length === 0));
     };
 
     const filteredReportPayload = getFilteredReport();
+
+    // DVR style Header text generator logic for the report table
+    const getReportHeaderText = () => {
+        if (selectedUsernames.length === 0 || selectedUsernames.includes('all_users')) {
+            return "All Sale Executives Selected";
+        }
+
+        // Check if exactly one person is selected to show singular form
+        const label = selectedUsernames.length === 1 ? "Sale Executive" : "Sale Executives";
+        return `${selectedUsernames.length} ${label} Selected`;
+    };
 
     const exportToExcel = () => {
         if (filteredReportPayload.length === 0) return;
@@ -137,34 +162,45 @@ const VisitVerificationReport = () => {
         };
 
         const headers = [
-            "Visit Date", "Sales Person", "Customer / Shop", 
+            "Visit Date", "Sales Person", "Customers",
             "Customer Location", "Visit Location (User)", "Distance", "Status"
         ];
 
         excelData.push(headers.map(h => ({ v: h, s: headerStyle })));
         currentRow++;
 
-        const salesPersonName = reportData.meta?.sales_person || "N/A";
-
         filteredReportPayload.forEach((day) => {
             const startRow = currentRow;
             const visitRecords = day.visits || [];
 
-            visitRecords.forEach((row) => {
-                const normalizedStatus = (row.verification_status || '').toLowerCase();
-                const displayStatus = normalizedStatus === 'verified' ? 'VERIFIED' : 'UNVERIFIED';
-
+            if (visitRecords.length === 0) {
                 excelData.push([
                     { v: formatForDisplay(day.date), s: centerStyle },
-                    { v: salesPersonName, s: regularStyle },
-                    { v: row.customer_name || "N/A", s: regularStyle },
-                    { v: formatCoordsText(row.customer_coordinates), s: regularStyle }, 
-                    { v: formatCoordsText(row.user_coordinates), s: regularStyle },     
-                    { v: row.calculated_distance || "0m", s: regularStyle },
-                    { v: displayStatus, s: { ...regularStyle, alignment: { horizontal: "center" } } }
+                    { v: day.sales_person || "N/A", s: regularStyle },
+                    { v: `NO VISITS (${day.leave_status || 'PRESENT'})`, s: regularStyle },
+                    { v: "N/A", s: regularStyle },
+                    { v: "N/A", s: regularStyle },
+                    { v: "N/A", s: regularStyle },
+                    { v: "N/A", s: centerStyle }
                 ]);
                 currentRow++;
-            });
+            } else {
+                visitRecords.forEach((row) => {
+                    const normalizedStatus = (row.verification_status || '').toLowerCase();
+                    const displayStatus = normalizedStatus === 'verified' ? 'VERIFIED' : 'UNVERIFIED';
+
+                    excelData.push([
+                        { v: formatForDisplay(day.date), s: centerStyle },
+                        { v: row.sales_person || day.sales_person || "N/A", s: regularStyle },
+                        { v: row.customer_name || "N/A", s: regularStyle },
+                        { v: formatCoordsText(row.customer_coordinates), s: regularStyle },
+                        { v: formatCoordsText(row.user_coordinates), s: regularStyle },
+                        { v: row.calculated_distance || "0m", s: regularStyle },
+                        { v: displayStatus, s: { ...regularStyle, alignment: { horizontal: "center" } } }
+                    ]);
+                    currentRow++;
+                });
+            }
 
             merges.push({
                 s: { r: startRow, c: 0 },
@@ -190,21 +226,51 @@ const VisitVerificationReport = () => {
 
             <Paper variant="outlined" sx={{ p: 2, mb: 3, borderTop: '3px solid #2e7d32' }}>
                 <Grid container spacing={2} alignItems="center">
-                    <Grid item xs={12} sm={6} md={2.5}>
-                        <TextField 
-                            select 
-                            size="small" 
-                            sx={{ width: '220px' }}
-                            label="Sales Person" 
-                            value={selectedUsername}
-                            onChange={(e) => setSelectedUsername(e.target.value)} 
-                            disabled={fetchingUsers}
+                    <Grid item xs={12} sm={6} md={3.2}>
+                        <FormControl
+                            size="small"
+                            fullWidth
+                            variant="outlined"
+                            // Yahan manual width control de diya hai jo kisi her haal mein structure ko lock rakhega
+                            sx={{ minWidth: '250px', maxWidth: '280px' }}
                         >
-                            <MenuItem value=""><em>All Sales Persons</em></MenuItem>
-                            {users.map((u) => (
-                                <MenuItem key={u.id} value={u.name}>{u.fullname || u.name}</MenuItem>
-                            ))}
-                        </TextField>
+                            <InputLabel id="sales-person-multi-select-label">Select Sales Person</InputLabel>
+                            <Select
+                                labelId="sales-person-multi-select-label"
+                                id="sales-person-multi-select"
+                                multiple
+                                value={selectedUsernames}
+                                onChange={handleUserChange}
+                                // Explicitly linking input outline with matching label string to completely bypass clippping/S.. bugs
+                                input={<OutlinedInput label="Select Sales Person" />}
+                                renderValue={(selected) => {
+                                    if (!selected || selected.length === 0 || selected.includes('all_users')) {
+                                        return "All Executives Selected";
+                                    }
+                                    if (selected.length === 1) {
+                                        return "1 Sale Executive Selected";
+                                    }
+                                    return `${selected.length} Sale Executives Selected`;
+                                }}
+                                disabled={fetchingUsers}
+                                MenuProps={{
+                                    PaperProps: {
+                                        style: { maxHeight: 320, width: 260 }
+                                    }
+                                }}
+                            >
+                                <MenuItem value="all_users">
+                                    <Checkbox checked={selectedUsernames.includes('all_users') || selectedUsernames.length === 0} />
+                                    <ListItemText primary="All Sales Persons" primaryTypographyProps={{ fontWeight: 'bold' }} />
+                                </MenuItem>
+                                {users.map((u) => (
+                                    <MenuItem key={u.id} value={u.name}>
+                                        <Checkbox checked={selectedUsernames.includes(u.name)} />
+                                        <ListItemText primary={u.fullname || u.name} />
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
                     </Grid>
 
                     <Grid item xs={12} sm={6} md={2}>
@@ -222,40 +288,40 @@ const VisitVerificationReport = () => {
                         </TextField>
                     </Grid>
 
-                    <Grid item xs={12} sm={6} md={2.25}>
-                        <TextField 
-                            size="small" 
+                    <Grid item xs={12} sm={6} md={2.5}>
+                        <TextField
+                            size="small"
                             fullWidth
-                            type="date" 
-                            label="From Date" 
+                            type="date"
+                            label="From Date"
                             InputLabelProps={{ shrink: true }}
-                            value={fromDate} 
-                            onChange={(e) => setFromDate(e.target.value)} 
+                            value={fromDate}
+                            onChange={(e) => setFromDate(e.target.value)}
                         />
                     </Grid>
 
-                    <Grid item xs={12} sm={6} md={2.25}>
-                        <TextField 
-                            size="small" 
+                    <Grid item xs={12} sm={6} md={2.5}>
+                        <TextField
+                            size="small"
                             fullWidth
-                            type="date" 
-                            label="To Date" 
+                            type="date"
+                            label="To Date"
                             InputLabelProps={{ shrink: true }}
-                            value={toDate} 
-                            onChange={(e) => setToDate(e.target.value)} 
+                            value={toDate}
+                            onChange={(e) => setToDate(e.target.value)}
                         />
                     </Grid>
-                    
+
                     <Grid item xs={12} sm={6} md={1.5}>
-                        <Button 
-                            variant="contained" 
-                            fullWidth 
+                        <Button
+                            variant="contained"
+                            fullWidth
                             startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <SearchIcon />}
-                            onClick={fetchReport} 
+                            onClick={fetchReport}
                             disabled={loading}
-                            sx={{ 
-                                bgcolor: '#2e7d32', 
-                                '&:hover': { bgcolor: '#1b5e20' }, 
+                            sx={{
+                                bgcolor: '#2e7d32',
+                                '&:hover': { bgcolor: '#1b5e20' },
                                 height: '40px',
                                 fontWeight: 'bold'
                             }}
@@ -263,19 +329,20 @@ const VisitVerificationReport = () => {
                             GENERATE
                         </Button>
                     </Grid>
-                    
-                    <Grid item xs={12} sm={6} md={1.5}>
-                        <Button 
-                            variant="outlined" 
-                            fullWidth 
+
+                    <Grid item xs={12} sm={6} md={0.5}>
+                        <Button
+                            variant="outlined"
+                            fullWidth
                             startIcon={<DownloadIcon />}
-                            onClick={exportToExcel} 
+                            onClick={exportToExcel}
                             disabled={filteredReportPayload.length === 0 || loading}
-                            sx={{ 
-                                color: '#2e7d32', 
-                                borderColor: '#2e7d32', 
+                            sx={{
+                                color: '#2e7d32',
+                                borderColor: '#2e7d32',
                                 height: '40px',
                                 fontWeight: 'bold',
+                                minWidth: '100px',
                                 '&:hover': { borderColor: '#1b5e20', bgcolor: '#f1f8e9' }
                             }}
                         >
@@ -291,9 +358,10 @@ const VisitVerificationReport = () => {
                 <TableContainer component={Paper} variant="outlined">
                     <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #eee' }}>
                         <Box>
-                            <Typography variant="caption" sx={{ color: '#888', fontWeight: 'bold', display: 'block' }}>VERIFICATION TRACKER</Typography>
+                            <Typography variant="caption" sx={{ color: '#888', fontWeight: 'bold', display: 'block' }}>TEAM VERIFICATION LOG ENGINE</Typography>
+                            {/* DVR Alignment: Table Subtitle rendered exactly dynamically based on person counts */}
                             <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
-                                {reportData.meta?.sales_person || "Detailed Log"} ({reportData.meta?.designation || "BDM"})
+                                {getReportHeaderText()}
                             </Typography>
                         </Box>
                         <Box sx={{ textTransform: 'uppercase', textAlign: 'right' }}>
@@ -321,13 +389,30 @@ const VisitVerificationReport = () => {
                         <TableBody>
                             {filteredReportPayload.map((day, dIndex) => {
                                 const visitRecords = day.visits || [];
-                                
+
+                                if (visitRecords.length === 0) {
+                                    return (
+                                        <TableRow key={`empty-${dIndex}`} hover>
+                                            <TableCell sx={{ fontWeight: 'bold' }}>{formatForDisplay(day.date)}</TableCell>
+                                            <TableCell sx={{ fontWeight: 'medium' }}>{day.sales_person || "N/A"}</TableCell>
+                                            <TableCell colSpan={4} sx={{ color: '#757575', fontStyle: 'italic' }}>
+                                                No field visits recorded — Status: {day.leave_status || 'PRESENT'}
+                                            </TableCell>
+                                            <TableCell align="center">
+                                                <Typography variant="caption" sx={{ fontWeight: 'bold', color: '#757575' }}>
+                                                    N/A
+                                                </Typography>
+                                            </TableCell>
+                                        </TableRow>
+                                    );
+                                }
+
                                 return (
                                     <React.Fragment key={dIndex}>
                                         {visitRecords.map((row, rIndex) => {
                                             const normalizedStatus = (row.verification_status || '').toLowerCase();
                                             const isVerified = normalizedStatus === 'verified';
-                                            
+
                                             const cLat = row.customer_coordinates?.lat;
                                             const cLng = row.customer_coordinates?.lng;
                                             const uLat = row.user_coordinates?.lat;
@@ -336,26 +421,25 @@ const VisitVerificationReport = () => {
                                             return (
                                                 <TableRow key={`${dIndex}-${rIndex}`} hover>
                                                     {rIndex === 0 && (
-                                                        <TableCell 
-                                                            rowSpan={visitRecords.length} 
+                                                        <TableCell
+                                                            rowSpan={visitRecords.length}
                                                             sx={{ borderRight: '1px solid #eee', verticalAlign: 'center', fontWeight: 'bold' }}
                                                         >
                                                             {formatForDisplay(day.date)}
                                                         </TableCell>
                                                     )}
                                                     <TableCell sx={{ fontWeight: 'medium' }}>
-                                                        {reportData.meta?.sales_person || "N/A"}
+                                                        {row.sales_person || day.sales_person || "N/A"}
                                                     </TableCell>
                                                     <TableCell>{row.customer_name || "N/A"}</TableCell>
-                                                    
-                                                    {/* Customer Location Link */}
+
                                                     <TableCell align="center">
                                                         {cLat && cLng ? (
                                                             <Tooltip title="Open Customer Location on Google Maps">
-                                                                <IconButton 
-                                                                    component="a" 
-                                                                    href={`https://www.google.com/maps/search/?api=1&query=${cLat},${cLng}`}
-                                                                    target="_blank" 
+                                                                <IconButton
+                                                                    component="a"
+                                                                    href={`https://maps.google.com/?q=${cLat},${cLng}`}
+                                                                    target="_blank"
                                                                     rel="noopener noreferrer"
                                                                     aria-label={`View customer coordinates ${cLat}, ${cLng} on Google Maps`}
                                                                     size="small"
@@ -368,14 +452,13 @@ const VisitVerificationReport = () => {
                                                         )}
                                                     </TableCell>
 
-                                                    {/* User Visit Location Link */}
                                                     <TableCell align="center">
                                                         {uLat && uLng ? (
                                                             <Tooltip title="Open Visit Location on Google Maps">
-                                                                <IconButton 
-                                                                    component="a" 
-                                                                    href={`https://www.google.com/maps/search/?api=1&query=${uLat},${uLng}`}
-                                                                    target="_blank" 
+                                                                <IconButton
+                                                                    component="a"
+                                                                    href={`https://maps.google.com/?q=${uLat},${uLng}`}
+                                                                    target="_blank"
                                                                     rel="noopener noreferrer"
                                                                     aria-label={`View sales person coordinates ${uLat}, ${uLng} on Google Maps`}
                                                                     size="small"
@@ -391,12 +474,12 @@ const VisitVerificationReport = () => {
                                                     <TableCell sx={{ fontWeight: 'medium' }}>
                                                         {row.calculated_distance || "0m"}
                                                     </TableCell>
-                                                    
+
                                                     <TableCell align="center">
                                                         <Typography
                                                             variant="body2"
                                                             fontWeight="bold"
-                                                            sx={{ 
+                                                            sx={{
                                                                 color: isVerified ? '#2e7d32' : '#d32f2f',
                                                                 textTransform: 'uppercase',
                                                                 fontSize: '0.75rem'
@@ -415,7 +498,7 @@ const VisitVerificationReport = () => {
                     </Table>
                 </TableContainer>
             )}
-            
+
             {reportData && filteredReportPayload.length === 0 && (
                 <Alert severity="warning" sx={{ mt: 2 }}>
                     No records match the selected verification filter status.
