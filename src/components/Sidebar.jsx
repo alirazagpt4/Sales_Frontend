@@ -41,69 +41,69 @@ const Sidebar = ({ drawerWidth, open }) => {
       <Toolbar sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', px: [1] }}>
         {open ? (
           <Box sx={{ display: 'flex', alignItems: 'center', pl: 2 }}>
-             <img src={FarmSolutionsLogoPath} alt="Logo" style={{ height: 50 }} />
+            <img src={FarmSolutionsLogoPath} alt="Logo" style={{ height: 50 }} />
           </Box>
         ) : (
-          <img src={FarmSolutionsLogoPath} alt="Logo" style={{ height: 30 }} /> 
+          <img src={FarmSolutionsLogoPath} alt="Logo" style={{ height: 30 }} />
         )}
       </Toolbar>
       <Divider />
-      
+
       <List>
         {/* Dashboard */}
         <Tooltip title={!open ? "Dashboard" : ""} placement="right">
-            <ListItemButton 
-                onClick={() => navigate('/')} 
-                selected={location.pathname === '/'}
-                sx={{ minHeight: 48, justifyContent: open ? 'initial' : 'center', px: 2.5 }}
-            >
-                <ListItemIcon sx={{ minWidth: 0, mr: open ? 3 : 'auto', justifyContent: 'center' }}>
-                    <DashboardIcon />
-                </ListItemIcon>
-                {open && <ListItemText primary="Dashboard" />}
-            </ListItemButton>
+          <ListItemButton
+            onClick={() => navigate('/')}
+            selected={location.pathname === '/'}
+            sx={{ minHeight: 48, justifyContent: open ? 'initial' : 'center', px: 2.5 }}
+          >
+            <ListItemIcon sx={{ minWidth: 0, mr: open ? 3 : 'auto', justifyContent: 'center' }}>
+              <DashboardIcon />
+            </ListItemIcon>
+            {open && <ListItemText primary="Dashboard" />}
+          </ListItemButton>
         </Tooltip>
 
         {/* Customers */}
         <Tooltip title={!open ? "Customers" : ""} placement="right">
-            <ListItemButton 
-                onClick={() => navigate('/customers')} 
-                selected={location.pathname === '/customers'}
-                sx={{ minHeight: 48, justifyContent: open ? 'initial' : 'center', px: 2.5 }}
-            >
-                <ListItemIcon sx={{ minWidth: 0, mr: open ? 3 : 'auto', justifyContent: 'center' }}>
-                    <GroupIcon />
-                </ListItemIcon>
-                {open && <ListItemText primary="Customers" />}
-            </ListItemButton>
+          <ListItemButton
+            onClick={() => navigate('/customers')}
+            selected={location.pathname === '/customers'}
+            sx={{ minHeight: 48, justifyContent: open ? 'initial' : 'center', px: 2.5 }}
+          >
+            <ListItemIcon sx={{ minWidth: 0, mr: open ? 3 : 'auto', justifyContent: 'center' }}>
+              <GroupIcon />
+            </ListItemIcon>
+            {open && <ListItemText primary="Customers" />}
+          </ListItemButton>
         </Tooltip>
 
         {/* Users */}
         <Tooltip title={!open ? "Users" : ""} placement="right">
-            <ListItemButton 
-                onClick={() => navigate('/users')} 
-                selected={location.pathname === '/users'}
-                sx={{ minHeight: 48, justifyContent: open ? 'initial' : 'center', px: 2.5 }}
-            >
-                <ListItemIcon sx={{ minWidth: 0, mr: open ? 3 : 'auto', justifyContent: 'center' }}>
-                    <PeopleIcon />
-                </ListItemIcon>
-                {open && <ListItemText primary="Users" />}
-            </ListItemButton>
+          <ListItemButton
+            onClick={() => navigate('/users')}
+            selected={location.pathname === '/users'}
+            sx={{ minHeight: 48, justifyContent: open ? 'initial' : 'center', px: 2.5 }}
+          >
+            <ListItemIcon sx={{ minWidth: 0, mr: open ? 3 : 'auto', justifyContent: 'center' }}>
+              <PeopleIcon />
+            </ListItemIcon>
+            {open && <ListItemText primary="Users" />}
+          </ListItemButton>
         </Tooltip>
 
         {/* Reports Parent */}
         <Tooltip title={!open ? "Reports" : ""} placement="right">
-            <ListItemButton 
-                onClick={handleReportsToggle}
-                sx={{ minHeight: 48, justifyContent: open ? 'initial' : 'center', px: 2.5 }}
-            >
-                <ListItemIcon sx={{ minWidth: 0, mr: open ? 3 : 'auto', justifyContent: 'center' }}>
-                    <BarChartIcon />
-                </ListItemIcon>
-                {open && <ListItemText primary="Reports" />}
-                {open && (openReports ? <ExpandLess /> : <ExpandMore />)}
-            </ListItemButton>
+          <ListItemButton
+            onClick={handleReportsToggle}
+            sx={{ minHeight: 48, justifyContent: open ? 'initial' : 'center', px: 2.5 }}
+          >
+            <ListItemIcon sx={{ minWidth: 0, mr: open ? 3 : 'auto', justifyContent: 'center' }}>
+              <BarChartIcon />
+            </ListItemIcon>
+            {open && <ListItemText primary="Reports" />}
+            {open && (openReports ? <ExpandLess /> : <ExpandMore />)}
+          </ListItemButton>
         </Tooltip>
 
         {/* Nested Items - Sirf open state mein dikhenge */}
@@ -120,6 +120,9 @@ const Sidebar = ({ drawerWidth, open }) => {
             </ListItemButton>
             <ListItemButton sx={{ pl: 4 }} onClick={() => navigate('/visit-verification-reports')} selected={location.pathname === '/visit-verification-reports'}>
               <ListItemText primary="Visit Verification Report" />
+            </ListItemButton>
+            <ListItemButton sx={{ pl: 4 }} onClick={() => navigate('/visit-count-report')} selected={location.pathname === '/visit-verification-reports'}>
+              <ListItemText primary="Visit Count Report" />
             </ListItemButton>
           </List>
         </Collapse>
