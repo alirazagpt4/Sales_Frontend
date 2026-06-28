@@ -154,7 +154,7 @@ const VisitCountReport = () => {
 
     return (
         <Box component="main" aria-label="Visit Count Report Dashboard">
-            <Typography variant="h5" sx={{ mb: 1 }}>Visit Count Detailed Report</Typography>
+            <Typography variant="h5" sx={{ mb: 1 }}>Visit Count Report</Typography>
             <Divider sx={{ mb: 3 }} />
 
             <Paper variant="outlined" sx={{ p: 2, mb: 3, borderTop: '3px solid #2e7d32' }}>
