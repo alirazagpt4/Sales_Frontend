@@ -11,7 +11,7 @@ import DownloadIcon from '@mui/icons-material/Download';
 import API from '../api/axiosClient.jsx';
 
 const formatForDisplay = (dateString) => {
-    if (!dateString) return "N/A";
+    if (!dateString || dateString === "N/A") return "N/A";
     const options = { month: 'short', day: 'numeric', year: 'numeric' };
     return new Date(dateString).toLocaleDateString('en-US', options);
 };
@@ -55,38 +55,36 @@ const VisitCountReport = () => {
         setSelectedUsernames(typeof value === 'string' ? value.split(',') : value);
     };
 
-  const fetchReport = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-        const params = new URLSearchParams();
+    const fetchReport = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const params = new URLSearchParams();
 
-        if (selectedUsernames.length > 0 && !selectedUsernames.includes('all_users')) {
-            // Agar multiple arrays hain ya single hai, to bina [] ke join karke single key bhein jaise backend demand kar raha hai
-            params.append('names', selectedUsernames.join(','));
-        } else {
-            params.append('names', 'All');
-        }
+            if (selectedUsernames.length > 0 && !selectedUsernames.includes('all_users')) {
+                params.append('names', selectedUsernames.join(','));
+            } else {
+                params.append('names', 'All');
+            }
 
-        params.append('fromDate', fromDate);
-        params.append('toDate', toDate);
+            params.append('fromDate', fromDate);
+            params.append('toDate', toDate);
 
-        // Raw query URL banega: ?names=hafiz.zia&fromDate=...
-        const response = await API.get(`reports/visit-count-report?${params.toString()}`);
+            const response = await API.get(`reports/visit-count-report?${params.toString()}`);
 
-        if (response.data && response.data.report && response.data.report.length > 0) {
-            setReportData(response.data);
-        } else {
+            if (response.data && response.data.report && response.data.report.length > 0) {
+                setReportData(response.data);
+            } else {
+                setReportData(null);
+                setError("No visit count records found.");
+            }
+        } catch (err) {
+            setError("Server error fetching visit counts.");
             setReportData(null);
-            setError("No visit count records found.");
+        } finally {
+            setLoading(false);
         }
-    } catch (err) {
-        setError("Server error fetching visit counts.");
-        setReportData(null);
-    } finally {
-        setLoading(false);
-    }
-};
+    };
 
     const getReportHeaderText = () => {
         if (selectedUsernames.length === 0 || selectedUsernames.includes('all_users')) {
@@ -100,7 +98,7 @@ const VisitCountReport = () => {
         if (!reportData || !reportData.report || reportData.report.length === 0) return;
 
         const excelData = [];
-        
+
         const headerStyle = {
             fill: { fgColor: { rgb: "2E7D32" } },
             font: { color: { rgb: "FFFFFF" }, bold: true },
@@ -127,11 +125,14 @@ const VisitCountReport = () => {
             }
         };
 
-        const headers = ["Customer Name", "Visit Count", "Last Visit"];
+        // Injecting Sales Person and Designation Columns in Excel
+        const headers = ["Sales Person", "Designation", "Customer Name", "Visit Count", "Last Visit"];
         excelData.push(headers.map(h => ({ v: h, s: headerStyle })));
 
         reportData.report.forEach((row) => {
             excelData.push([
+                { v: row.sales_person || "N/A", s: regularStyle },
+                { v: row.designation || "N/A", s: regularStyle },
                 { v: row.customer_name || "N/A", s: regularStyle },
                 { v: row.visit_count ?? 0, s: centerStyle },
                 { v: formatForDisplay(row.last_visit), s: centerStyle }
@@ -139,7 +140,8 @@ const VisitCountReport = () => {
         });
 
         const ws = XLSX.utils.aoa_to_sheet(excelData);
-        ws['!cols'] = [{ wch: 40 }, { wch: 18 }, { wch: 22 }];
+        // Explicit Column Width Balancing
+        ws['!cols'] = [{ wch: 25 }, { wch: 20 }, { wch: 35 }, { wch: 15 }, { wch: 20 }];
 
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Visit Summary");
@@ -160,9 +162,7 @@ const VisitCountReport = () => {
             <Paper variant="outlined" sx={{ p: 2, mb: 3, borderTop: '3px solid #2e7d32' }}>
                 <Grid container spacing={2} alignItems="center">
                     <Grid item xs={12} sm={6} md={4}>
-                        <FormControl size="small" fullWidth variant="outlined"
-                        sx={{ minWidth: '250px', maxWidth: '280px' }}
-                        >
+                        <FormControl size="small" fullWidth variant="outlined" sx={{ minWidth: '250px', maxWidth: '280px' }}>
                             <InputLabel id="count-sales-person-label">Select Sales Person</InputLabel>
                             <Select
                                 labelId="count-sales-person-label"
@@ -175,7 +175,11 @@ const VisitCountReport = () => {
                                     if (!selected || selected.length === 0 || selected.includes('all_users')) {
                                         return "All Executives Selected";
                                     }
-                                    if (selected.length === 1) return selected[0];
+                                    if (selected.length === 1) {
+                                        // Find user object from local array state using the unique 'name' identifier
+                                        const targetUser = users.find(u => u.name === selected[0]);
+                                        return targetUser ? (targetUser.fullname || targetUser.name) : selected[0];
+                                    }
                                     return `${selected.length} Sale Executives Selected`;
                                 }}
                                 disabled={fetchingUsers}
@@ -185,9 +189,12 @@ const VisitCountReport = () => {
                                     <Checkbox checked={selectedUsernames.includes('all_users') || selectedUsernames.length === 0} />
                                     <ListItemText primary="All Sales Persons" primaryTypographyProps={{ fontWeight: 'bold' }} />
                                 </MenuItem>
+
                                 {users.map((u) => (
+                                    // Value strictly 'u.name' (e.g., 'hafiz.zia') hi pass hogi backend params ke liye
                                     <MenuItem key={u.id} value={u.name}>
                                         <Checkbox checked={selectedUsernames.includes(u.name)} />
+                                        {/* Visual Layer par user ko 'fullname' render hoga monitor par */}
                                         <ListItemText primary={u.fullname || u.name} />
                                     </MenuItem>
                                 ))}
@@ -278,6 +285,9 @@ const VisitCountReport = () => {
                     <Table size="small" aria-label="Visit Counts Summary Table">
                         <TableHead sx={{ bgcolor: '#f5f5f5' }}>
                             <TableRow>
+                                {/* Added structural headers before Customer Name */}
+                                <TableCell sx={{ fontWeight: 'bold' }}>Sales Person</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold' }}>Designation</TableCell>
                                 <TableCell sx={{ fontWeight: 'bold' }}>Customer Name</TableCell>
                                 <TableCell align="center" sx={{ fontWeight: 'bold' }}>Visit Count</TableCell>
                                 <TableCell align="center" sx={{ fontWeight: 'bold' }}>Last Visit Date</TableCell>
@@ -286,6 +296,8 @@ const VisitCountReport = () => {
                         <TableBody>
                             {reportData.report.map((row, index) => (
                                 <TableRow key={index} hover>
+                                    <TableCell sx={{ fontWeight: 'medium' }}>{row.sales_person || "N/A"}</TableCell>
+                                    <TableCell>{row.designation || "N/A"}</TableCell>
                                     <TableCell>{row.customer_name || "N/A"}</TableCell>
                                     <TableCell align="center" sx={{ fontWeight: 'bold', color: '#2e7d32' }}>
                                         {row.visit_count ?? 0}
