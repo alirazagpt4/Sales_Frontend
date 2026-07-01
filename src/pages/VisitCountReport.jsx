@@ -73,6 +73,7 @@ const VisitCountReport = () => {
             const response = await API.get(`reports/visit-count-report?${params.toString()}`);
 
             if (response.data && response.data.report && response.data.report.length > 0) {
+                console.log("backend response", response.data);
                 setReportData(response.data);
             } else {
                 setReportData(null);
@@ -126,13 +127,13 @@ const VisitCountReport = () => {
         };
 
         // Injecting Sales Person and Designation Columns in Excel
-        const headers = ["Sales Person", "Designation", "Customer Name", "Visit Count", "Last Visit"];
+        const headers = ["Sales Person", "Customer Type", "Customer Name", "Visit Count", "Last Visit"];
         excelData.push(headers.map(h => ({ v: h, s: headerStyle })));
 
         reportData.report.forEach((row) => {
             excelData.push([
                 { v: row.sales_person || "N/A", s: regularStyle },
-                { v: row.designation || "N/A", s: regularStyle },
+                { v: row.customer_type || "N/A", s: regularStyle },
                 { v: row.customer_name || "N/A", s: regularStyle },
                 { v: row.visit_count ?? 0, s: centerStyle },
                 { v: formatForDisplay(row.last_visit), s: centerStyle }
@@ -267,7 +268,7 @@ const VisitCountReport = () => {
                 <TableContainer component={Paper} variant="outlined">
                     <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #eee' }}>
                         <Box>
-                            <Typography variant="caption" sx={{ color: '#888', fontWeight: 'bold', display: 'block' }}>VISIT COUNTER ENGINE</Typography>
+                            <Typography variant="caption" sx={{ color: '#888', fontWeight: 'bold', display: 'block' }}>VISIT COUNT HEADER</Typography>
                             <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
                                 {getReportHeaderText()}
                             </Typography>
@@ -287,7 +288,7 @@ const VisitCountReport = () => {
                             <TableRow>
                                 {/* Added structural headers before Customer Name */}
                                 <TableCell sx={{ fontWeight: 'bold' }}>Sales Person</TableCell>
-                                <TableCell sx={{ fontWeight: 'bold' }}>Designation</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold' }}>Customer Type</TableCell>
                                 <TableCell sx={{ fontWeight: 'bold' }}>Customer Name</TableCell>
                                 <TableCell align="center" sx={{ fontWeight: 'bold' }}>Visit Count</TableCell>
                                 <TableCell align="center" sx={{ fontWeight: 'bold' }}>Last Visit Date</TableCell>
@@ -297,7 +298,7 @@ const VisitCountReport = () => {
                             {reportData.report.map((row, index) => (
                                 <TableRow key={index} hover>
                                     <TableCell sx={{ fontWeight: 'medium' }}>{row.sales_person || "N/A"}</TableCell>
-                                    <TableCell>{row.designation || "N/A"}</TableCell>
+                                    <TableCell>{row.customer_type || "N/A"}</TableCell>
                                     <TableCell>{row.customer_name || "N/A"}</TableCell>
                                     <TableCell align="center" sx={{ fontWeight: 'bold', color: '#2e7d32' }}>
                                         {row.visit_count ?? 0}
