@@ -95,6 +95,18 @@ const VisitCountReport = () => {
         return `${selectedUsernames.length} ${label} Selected`;
     };
 
+
+    const getVisitPurposeLabel = (purpose) => {
+        const mapping = {
+            'New': 'Customer Regular Visit',
+            'Old': 'Follow Up Visit',
+            'Mature': 'Mature Order',
+            'NewPotentialCustomer': 'New Potential Customer'
+        };
+        return mapping[purpose] || purpose;
+    };
+
+
     const exportToExcel = () => {
         if (!reportData || !reportData.report || reportData.report.length === 0) return;
 
@@ -127,7 +139,7 @@ const VisitCountReport = () => {
         };
 
         // Injecting Sales Person and Designation Columns in Excel
-        const headers = ["Sales Person", "Customer Type", "Customer Name", "Visit Count", "Last Visit"];
+        const headers = ["Sales Person", "Customer Type", "Customer Name", "Visit Purpose", "Visit Count", "Last Visit"];
         excelData.push(headers.map(h => ({ v: h, s: headerStyle })));
 
         reportData.report.forEach((row) => {
@@ -135,14 +147,16 @@ const VisitCountReport = () => {
                 { v: row.sales_person || "N/A", s: regularStyle },
                 { v: row.customer_type || "N/A", s: regularStyle },
                 { v: row.customer_name || "N/A", s: regularStyle },
+                { v: row.visit_purpose ? getVisitPurposeLabel(row.visit_purpose) : "N/A", s: regularStyle },
                 { v: row.visit_count ?? 0, s: centerStyle },
+
                 { v: formatForDisplay(row.last_visit), s: centerStyle }
             ]);
         });
 
         const ws = XLSX.utils.aoa_to_sheet(excelData);
         // Explicit Column Width Balancing
-        ws['!cols'] = [{ wch: 25 }, { wch: 20 }, { wch: 35 }, { wch: 15 }, { wch: 20 }];
+        ws['!cols'] = [{ wch: 25 }, { wch: 20 }, { wch: 35 }, { wch: 35 }, { wch: 15 }, { wch: 20 }];
 
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Visit Summary");
@@ -290,6 +304,7 @@ const VisitCountReport = () => {
                                 <TableCell sx={{ fontWeight: 'bold' }}>Sales Person</TableCell>
                                 <TableCell sx={{ fontWeight: 'bold' }}>Customer Type</TableCell>
                                 <TableCell sx={{ fontWeight: 'bold' }}>Customer Name</TableCell>
+                                <TableCell align="center" sx={{ fontWeight: 'bold' }}>Visit Purpose</TableCell>
                                 <TableCell align="center" sx={{ fontWeight: 'bold' }}>Visit Count</TableCell>
                                 <TableCell align="center" sx={{ fontWeight: 'bold' }}>Last Visit Date</TableCell>
                             </TableRow>
@@ -300,6 +315,9 @@ const VisitCountReport = () => {
                                     <TableCell sx={{ fontWeight: 'medium' }}>{row.sales_person || "N/A"}</TableCell>
                                     <TableCell>{row.customer_type || "N/A"}</TableCell>
                                     <TableCell>{row.customer_name || "N/A"}</TableCell>
+                                    <TableCell align="center">
+                                        {row.visit_purpose ? getVisitPurposeLabel(row.visit_purpose) : "N/A"}
+                                    </TableCell>
                                     <TableCell align="center" sx={{ fontWeight: 'bold', color: '#2e7d32' }}>
                                         {row.visit_count ?? 0}
                                     </TableCell>
