@@ -124,6 +124,9 @@ const Sidebar = ({ drawerWidth, open }) => {
             <ListItemButton sx={{ pl: 4 }} onClick={() => navigate('/visit-count-report')} selected={location.pathname === '/visit-verification-reports'}>
               <ListItemText primary="Visit Count Report" />
             </ListItemButton>
+            <ListItemButton sx={{ pl: 4 }} onClick={() => navigate('/sales-person-wise-dvr-report')} selected={location.pathname === '/sales-person-wise-dvr-report'}>
+              <ListItemText primary="Sales Person Wise Report" />
+            </ListItemButton>
           </List>
         </Collapse>
       </List>
