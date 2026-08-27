@@ -74,7 +74,7 @@ const MeterReadingReport = () => {
     useEffect(() => {
         const fetchUsersList = async () => {
             try {
-                const response = await API.get('/users?limit=1000'); // Assuming this endpoint returns all users without pagination
+                const response = await API.get('/users?page=1&limit=1000&is_active=true'); // Assuming this endpoint returns all users without pagination
                 console.log("USERS RESPONSE ......", response.data.users);
                 const data = response.data.users || response.data || [];
                 // 1. Technical Audit: Define excluded IDs in a constant to avoid "Magic Numbers"

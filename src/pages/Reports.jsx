@@ -175,7 +175,7 @@ const Reports = () => {
     useEffect(() => {
         const fetchUsersList = async () => {
             try {
-                const response = await API.get('/users?limit=1000');
+                const response = await API.get('/users?page=1&limit=1000&is_active=true');
                 const data = response.data.users || response.data || [];
                 const EXCLUDED_DESIGNATIONS = [null, 7, 8];
 

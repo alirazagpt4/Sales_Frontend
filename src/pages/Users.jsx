@@ -16,6 +16,8 @@ import {
     Dialog, DialogTitle, DialogContent, DialogActions,
     Select, MenuItem, InputLabel, FormControl, Pagination, Grid, Divider// Added back for role selection
 } from '@mui/material';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CancelIcon from '@mui/icons-material/Cancel';
 
 import VisibilityIcon from '@mui/icons-material/Visibility';
 
@@ -28,18 +30,17 @@ import PeopleIcon from '@mui/icons-material/People';
 
 // --- HEADERS for Users ---
 const HEADERS = [
-    { label: 'ID', align: 'left' },
-    { label: 'User Name', align: 'left' },
-    { label: 'Full Name', align: 'left' },
-    { label: 'Designation', align: 'left' }, // ✅ NEW: Designation
-    // { label: 'Email', align: 'left' },
-    { label: 'Mobile', align: 'left' },    // <--- ADD THIS
-    { label: 'WhatsApp', align: 'left' },
-    { label: 'Report To', align: 'left' },
-    { label: 'City', align: 'left' },        // ✅ NEW: City
-    // { label: 'Report To', align: 'left' }, 
-    { label: 'Region', align: 'left' },       // ✅ NEW: City
-    { label: 'Actions', align: 'center' },
+    { label: 'ID', align: 'left', width: '45px' },
+    { label: 'User Name', align: 'left', width: '110px' },
+    { label: 'Full Name', align: 'left', width: '130px' },
+    { label: 'Designation', align: 'left', width: '160px' }, // Width badha di hai taake text overlap na ho
+    { label: 'Mobile', align: 'left', width: '110px' },
+    { label: 'WhatsApp', align: 'left', width: '110px' },
+    { label: 'Report To', align: 'left', width: '100px' },
+    { label: 'City', align: 'left', width: '90px' },
+    { label: 'Region', align: 'left', width: '90px' },
+    { label: 'Status', align: 'center', width: '60px' },
+    { label: 'Actions', align: 'center', width: '80px' },
 ];
 
 const initialFormData = {
@@ -92,6 +93,7 @@ const Users = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [togglingId, setTogglingId] = useState(null);
 
     // Inside Users component
     const [cities, setCities] = useState([]); // To store city list
@@ -180,17 +182,17 @@ const Users = () => {
         } finally {
             setLoading(false);
         }
-    }, [logout, page , searchTerm]); // Dependency mein 'page' add kiya
+    }, [logout, page, searchTerm]); // Dependency mein 'page' add kiya
 
 
     useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-        setPage(1); // Nayi search par page 1 par wapis jao
-        fetchUsers();
-    }, 500); // 500ms wait karega typing rukne ka
+        const delayDebounceFn = setTimeout(() => {
+            setPage(1); // Nayi search par page 1 par wapis jao
+            fetchUsers();
+        }, 500); // 500ms wait karega typing rukne ka
 
-    return () => clearTimeout(delayDebounceFn);
-}, [searchTerm]); // Sirf searchTerm par trigger hoga
+        return () => clearTimeout(delayDebounceFn);
+    }, [searchTerm]); // Sirf searchTerm par trigger hoga
 
 
     // --- 1. Initial Data Fetch ---
@@ -209,12 +211,12 @@ const Users = () => {
         // Component unmount hote waqt interval ko clear karna zaroori hai
         // warna memory leak ho sakti hai
         return () => clearInterval(interval);
-    }, [fetchUsers , fetchCities, fetchDesignations, fetchManagers]); // Multiple dependencies
+    }, [fetchUsers, fetchCities, fetchDesignations, fetchManagers]); // Multiple dependencies
     // ...
 
 
 
-   
+
 
 
     // --- 3. MODAL & FORM HANDLERS ---
@@ -343,6 +345,45 @@ const Users = () => {
         );
     }
 
+
+
+    // TOGGLE STATUS HANDLER
+    const handleToggleStatus = async (userId, currentStatus) => {
+        // Current state check: true/false ya 'active' string support
+        const isCurrentlyActive = currentStatus === true || currentStatus === 'active';
+        const nextStatus = !isCurrentlyActive; // Toggle logic
+
+        setTogglingId(userId);
+
+        // 1. Optimistic UI Update (Table me foran update dikhane ke liye)
+        setOriginalUsers(prev =>
+            prev.map(u =>
+                u.id === userId
+                    ? { ...u, is_active: nextStatus, status: nextStatus ? 'active' : 'inactive' }
+                    : u
+            )
+        );
+
+        try {
+            // 2. Exact Backend API Call
+            await API.patch(`/users/toggle-status/${userId}`, {
+                is_active: nextStatus
+            });
+        } catch (err) {
+            // 3. Revert on API Failure
+            setOriginalUsers(prev =>
+                prev.map(u =>
+                    u.id === userId
+                        ? { ...u, is_active: isCurrentlyActive, status: isCurrentlyActive ? 'active' : 'inactive' }
+                        : u
+                )
+            );
+            setError(err.response?.data?.message || "Failed to update status.");
+        } finally {
+            setTogglingId(null);
+        }
+    };
+
     // --- 6. Main Component Render ---
     return (
         <Box sx={{ p: 2 }}>
@@ -378,13 +419,8 @@ const Users = () => {
 
             {/* --- User Table --- */}
             {/* --- User Table --- */}
-            <TableContainer component={Paper} elevation={3} sx={{ borderRadius: '8px', overflow: 'hidden' }}>
-
-                {/* <Typography variant="h6">
-                    My Role: {user?.role} | Am I SuperAdmin? {user?.role === 'superadmin' ? 'YES' : 'NO'}
-                </Typography> */}
-
-                <Table size="small" sx={{ minWidth: 800 }} aria-label="user table">
+            <TableContainer component={Paper} sx={{ width: '100%', overflowX: 'auto' }}>
+                <Table sx={{ tableLayout: 'fixed', minWidth: 950 }}>
 
                     {/* Header styling: Background dark green aur font bold */}
                     <TableHead sx={{ backgroundColor: '#f5f5f5' }}>
@@ -394,10 +430,11 @@ const Users = () => {
                                     key={header.label}
                                     align={header.align}
                                     sx={{
-
+                                        width: header.width,
                                         fontWeight: 'bold',
-                                        fontSize: '0.70rem', // Header thora bara
-                                        py: 1.5
+                                        fontSize: '0.70rem',
+                                        py: 1.5,
+                                        px: 1
                                     }}
                                 >
                                     {header.label}
@@ -407,68 +444,74 @@ const Users = () => {
                     </TableHead>
 
                     <TableBody>
-                        {originalUsers.map((user, index) => (
-                            <TableRow
-                                key={user.id}
-                                hover
-                                sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-                            >
-                                {/* Table Cells: Font size chota kiya gaya hai (0.8rem) */}
-                                <TableCell sx={{ fontSize: '0.65rem', py: 1 }}>{(page - 1) * USERS_PER_PAGE + index + 1}</TableCell>
-                                <TableCell sx={{ fontSize: '0.65rem', fontWeight: 500 }}>{user.name}</TableCell>
+                        {originalUsers.map((user, index) => {
+                            const isActive = user.is_active ?? user.status === 'active' ?? false;
 
-                                <TableCell sx={{
-                                    fontSize: '0.65rem',
-                                    minWidth: 130, // 150 se kam karkay 130 kiya
-                                    whiteSpace: 'nowrap'
-                                }}>
-                                    {user.fullname || 'N/A'}
-                                </TableCell>
+                            return (
+                                <TableRow key={user.id} hover>
+                                    <TableCell sx={{ fontSize: '0.65rem', py: 1, px: 1 }}>{(page - 1) * USERS_PER_PAGE + index + 1}</TableCell>
+                                    <TableCell sx={{ fontSize: '0.65rem', fontWeight: 500, px: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.name}</TableCell>
+                                    <TableCell sx={{ fontSize: '0.65rem', px: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.fullname || 'N/A'}</TableCell>
+                                    <TableCell sx={{ fontSize: '0.65rem', px: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                        {user.designationDetails?.designation || 'N/A'}
+                                    </TableCell>
+                                    <TableCell sx={{ fontSize: '0.65rem', px: 1, whiteSpace: 'nowrap' }}>{user.mobile_ph || 'N/A'}</TableCell>
+                                    <TableCell sx={{ fontSize: '0.65rem', px: 1, whiteSpace: 'nowrap' }}>{user.whatsapp_ph || 'N/A'}</TableCell>
+                                    <TableCell sx={{ fontSize: '0.57rem', textTransform: 'capitalize', px: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.manager?.name || 'N/A'}</TableCell>
+                                    <TableCell sx={{ fontSize: '0.65rem', px: 1 }}>{user.cityName || 'N/A'}</TableCell>
+                                    <TableCell sx={{ fontSize: '0.65rem', px: 1 }}>{user.region || 'N/A'}</TableCell>
 
-                                <TableCell sx={{
-                                    fontSize: '0.65rem',
-                                    minWidth: 110,
-                                    whiteSpace: 'nowrap'
-                                }}>
-                                    {user.designationDetails?.designation || 'N/A'}
-                                </TableCell>
-
-                                <TableCell sx={{ fontSize: '0.65rem' }}>{user.mobile_ph || 'N/A'}</TableCell>
-                                <TableCell sx={{ fontSize: '0.65rem' }}>{user.whatsapp_ph || 'N/A'}</TableCell>
-                                <TableCell sx={{ fontSize: '0.57rem', textTransform: 'capitalize' }}>{user.manager?.name || 'N/A'}</TableCell>
-                                <TableCell sx={{ fontSize: '0.65rem' }}>{user.cityName || 'N/A'}</TableCell>
-
-                                <TableCell sx={{
-                                    fontSize: '0.65rem',
-                                    minWidth: 120,
-                                    whiteSpace: 'nowrap'
-                                }}>
-                                    {user.region || 'N/A'}
-                                </TableCell>
-
-                                {/* Actions Column: Buttons ko mazeed compact kiya gaya hai */}
-                                <TableCell align="center" sx={{ whiteSpace: 'nowrap' }}>
-                                    {isSuperAdmin && (
+                                    {/* Status Tick/Cross Column */}
+                                    <TableCell align="center" sx={{ px: 0.5 }}>
                                         <Button
                                             size="small"
-                                            onClick={() => handleOpenEditModal(user)}
-                                            sx={{ minWidth: 0, p: 0.5, mr: 1 }}
+                                            disabled={togglingId === user.id}
+                                            onClick={() => handleToggleStatus(user.id, isActive)}
+                                            sx={{
+                                                minWidth: 28,
+                                                height: 28,
+                                                borderRadius: '50%',
+                                                p: 0,
+                                                color: isActive ? '#2e7d32' : '#d32f2f',
+                                                backgroundColor: isActive ? '#e8f5e9' : '#ffebee',
+                                                '&:hover': {
+                                                    backgroundColor: isActive ? '#c8e6c9' : '#ffcdd2',
+                                                }
+                                            }}
                                         >
-                                            <EditIcon fontSize="small" color="primary" />
+                                            {togglingId === user.id ? (
+                                                <CircularProgress size={14} color="inherit" />
+                                            ) : isActive ? (
+                                                <CheckCircleIcon fontSize="small" />
+                                            ) : (
+                                                <CancelIcon fontSize="small" />
+                                            )}
                                         </Button>
-                                    )}
+                                    </TableCell>
 
-                                    <Button
-                                        size="small"
-                                        color="info"
-                                        onClick={() => handleOpenViewModal(user)}
-                                        sx={{ minWidth: 0, p: 0.5 }}
-                                    >
-                                        <VisibilityIcon fontSize="small" />
-                                    </Button>
-                                </TableCell>
-                            </TableRow>
-                        ))}
+                                    {/* Actions Column */}
+                                    <TableCell align="center" sx={{ px: 0.5, whiteSpace: 'nowrap' }}>
+                                        {isSuperAdmin && (
+                                            <Button
+                                                size="small"
+                                                onClick={() => handleOpenEditModal(user)}
+                                                sx={{ minWidth: 0, p: 0.5, mr: 0.5 }}
+                                            >
+                                                <EditIcon fontSize="small" color="primary" />
+                                            </Button>
+                                        )}
+                                        <Button
+                                            size="small"
+                                            color="info"
+                                            onClick={() => handleOpenViewModal(user)}
+                                            sx={{ minWidth: 0, p: 0.5 }}
+                                        >
+                                            <VisibilityIcon fontSize="small" />
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
+                            );
+                        })}
                     </TableBody>
                 </Table>
             </TableContainer>
