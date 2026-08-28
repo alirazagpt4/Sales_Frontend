@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import {
     Typography, Box, TextField, Button, Grid, Paper,
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-    CircularProgress, Alert, Divider, MenuItem, Chip
+    CircularProgress, Alert, Divider, MenuItem
 } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
 import SearchIcon from '@mui/icons-material/Search';
@@ -179,10 +179,7 @@ const SalesPersonWiseDvrReport = () => {
             return row;
         };
 
-        excelData.push(buildRow("Status", d => d.is_leave ? "LEAVE" : "PRESENT"));
         excelData.push(buildRow("Customers", d => d.is_leave ? "-" : ((d.visited_customers || []).join(", ") || "-")));
-        excelData.push(buildRow("Area", d => d.is_leave ? "-" : (d.area ?? "-")));
-        excelData.push(buildRow("Cities", d => d.is_leave ? "-" : ((d.visited_cities || []).join(", ") || "-")));
         excelData.push(buildRow("Region", () => meta.region || "-"));
         excelData.push(buildRow("Meter Reading", d => d.is_leave ? "-" : d.meter_reading));
         excelData.push(buildRow("Daily KM", d => d.is_leave ? "-" : d.daily_km));
@@ -217,7 +214,7 @@ const SalesPersonWiseDvrReport = () => {
             {/* --- Filters Section --- */}
             <Paper variant="outlined" sx={{ p: 2, mb: 3 }}>
                 <Grid container spacing={2} alignItems="center">
-                    <Grid item xs={12} sm={3}>
+                    <Grid item xs={12} sm={2.4}>
                         <TextField
                             select
                             size="small"
@@ -236,28 +233,28 @@ const SalesPersonWiseDvrReport = () => {
                         </TextField>
                     </Grid>
 
-                    <Grid item xs={12} sm={3}>
+                    <Grid item xs={12} sm={2.4}>
                         <TextField size="small" fullWidth type="date" label="From" InputLabelProps={{ shrink: true }}
                             value={fromDate} onChange={(e) => setFromDate(e.target.value)}
                             InputProps={{ startAdornment: <Box sx={{ position: 'absolute', left: 10, bgcolor: '#fff', width: 'calc(100% - 45px)', pointerEvents: 'none' }}><Typography variant="body2">{formatForDisplay(fromDate)}</Typography></Box> }}
                         />
                     </Grid>
 
-                    <Grid item xs={12} sm={3}>
+                    <Grid item xs={12} sm={2.4}>
                         <TextField size="small" fullWidth type="date" label="To" InputLabelProps={{ shrink: true }}
                             value={toDate} onChange={(e) => setToDate(e.target.value)}
                             InputProps={{ startAdornment: <Box sx={{ position: 'absolute', left: 10, bgcolor: '#fff', width: 'calc(100% - 45px)', pointerEvents: 'none' }}><Typography variant="body2">{formatForDisplay(toDate)}</Typography></Box> }}
                         />
                     </Grid>
 
-                    <Grid item xs={12} sm={2}>
+                    <Grid item xs={12} sm={2.4}>
                         <Button variant="contained" disableElevation fullWidth startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <SearchIcon />}
                             onClick={fetchReport} sx={{ bgcolor: '#2e7d32', '&:hover': { bgcolor: '#1b5e20' }, height: '40px' }}>
                             Generate
                         </Button>
                     </Grid>
 
-                    <Grid item xs={12} sm={2}>
+                    <Grid item xs={12} sm={2.4}>
                         <Button
                             variant="outlined"
                             fullWidth
@@ -328,32 +325,27 @@ const SalesPersonWiseDvrReport = () => {
                             </TableHead>
                             <TableBody>
                                 <TableRow>
-                                    <TableCell sx={stickyLabelStyle}>Status</TableCell>
-                                    {reportData.report.map((day, i) => (
-                                        <TableCell key={i} sx={{ border: '1px solid #ddd', textAlign: 'center' }}>
-                                            {day.is_leave
-                                                ? <Chip label="LEAVE" size="small" color="error" />
-                                                : <Chip label="PRESENT" size="small" color="success" variant="outlined" />}
-                                        </TableCell>
-                                    ))}
-                                </TableRow>
-
-                                <TableRow>
                                     <TableCell sx={stickyLabelStyle}>Customers</TableCell>
                                     {reportData.report.map((day, i) => (
-                                        <TableCell key={i} sx={{ border: '1px solid #ddd', fontSize: '0.8rem' }}>
-                                            {day.is_leave ? '-' : ((day.visited_customers && day.visited_customers.length) ? day.visited_customers.join(', ') : '-')}
-                                        </TableCell>
-                                    ))}
-                                </TableRow>
-
-                              
-
-                                <TableRow>
-                                    <TableCell sx={stickyLabelStyle}>Cities</TableCell>
-                                    {reportData.report.map((day, i) => (
-                                        <TableCell key={i} sx={{ border: '1px solid #ddd', textAlign: 'center' }}>
-                                            {day.is_leave ? '-' : ((day.visited_cities && day.visited_cities.join(', ')) || '-')}
+                                        <TableCell key={i} sx={{ border: '1px solid #ddd', fontSize: '0.8rem', p: 0 }}>
+                                            {day.is_leave ? (
+                                                <Box sx={{ p: 1, textAlign: 'center' }}>-</Box>
+                                            ) : (day.visited_customers && day.visited_customers.length) ? (
+                                                day.visited_customers.map((c, idx) => (
+                                                    <Box
+                                                        key={idx}
+                                                        sx={{
+                                                            px: 1,
+                                                            py: 0.6,
+                                                            borderBottom: idx !== day.visited_customers.length - 1 ? '1px solid #ddd' : 'none'
+                                                        }}
+                                                    >
+                                                        {c}
+                                                    </Box>
+                                                ))
+                                            ) : (
+                                                <Box sx={{ p: 1, textAlign: 'center' }}>-</Box>
+                                            )}
                                         </TableCell>
                                     ))}
                                 </TableRow>
@@ -363,6 +355,15 @@ const SalesPersonWiseDvrReport = () => {
                                     {reportData.report.map((day, i) => (
                                         <TableCell key={i} sx={{ border: '1px solid #ddd', textAlign: 'center' }}>
                                             {reportData.meta.region || '-'}
+                                        </TableCell>
+                                    ))}
+                                </TableRow>
+
+                                <TableRow>
+                                    <TableCell sx={stickyLabelStyle}>Total Visits</TableCell>
+                                    {reportData.report.map((day, i) => (
+                                        <TableCell key={i} sx={{ border: '1px solid #ddd', textAlign: 'center' }}>
+                                            {day.is_leave ? '-' : day.total_visits}
                                         </TableCell>
                                     ))}
                                 </TableRow>
@@ -385,14 +386,7 @@ const SalesPersonWiseDvrReport = () => {
                                     ))}
                                 </TableRow>
 
-                                <TableRow>
-                                    <TableCell sx={stickyLabelStyle}>Total Visits</TableCell>
-                                    {reportData.report.map((day, i) => (
-                                        <TableCell key={i} sx={{ border: '1px solid #ddd', textAlign: 'center' }}>
-                                            {day.is_leave ? '-' : day.total_visits}
-                                        </TableCell>
-                                    ))}
-                                </TableRow>
+
                             </TableBody>
                         </Table>
                     </TableContainer>
