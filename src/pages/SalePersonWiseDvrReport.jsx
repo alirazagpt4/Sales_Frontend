@@ -327,7 +327,7 @@ const SalesPersonWiseDvrReport = () => {
                                 <TableRow>
                                     <TableCell sx={stickyLabelStyle}>Customers</TableCell>
                                     {reportData.report.map((day, i) => (
-                                        <TableCell key={i} sx={{ border: '1px solid #ddd', fontSize: '0.8rem', p: 0 }}>
+                                        <TableCell key={i} sx={{ border: '1px solid #ddd', fontSize: '0.8rem', p: 0, verticalAlign: 'top' }}>
                                             {day.is_leave ? (
                                                 <Box sx={{ p: 1, textAlign: 'center' }}>-</Box>
                                             ) : (day.visited_customers && day.visited_customers.length) ? (
