@@ -72,7 +72,7 @@ const Reports = () => {
         // Headers set karna - Sales Person column shamil kiya hai multi-user report ke liye
         const headers = [
             "Date", "Sales Person", "Time", "Type", "Customer Name", "Tehsil",
-            "City", "Region", "Visit Purpose", "Bags Potential", "Day Start Info"
+            "City", "Region", "Visit Purpose", "Customer Phone", "Day Start Info"
         ];
 
         // Header Row with Style
@@ -95,7 +95,7 @@ const Reports = () => {
                     { v: visit?.city || "-", s: bodyStyle },
                     { v: visit?.region || "-", s: bodyStyle },
                     { v: visit ? getVisitPurposeLabel(visit.visit_purpose) : "-", s: bodyStyle },
-                    { v: visit?.bags_potential || "-", s: bodyStyle },
+                    { v: visit?.customer_phone || "-", s: bodyStyle },
                     { v: group.is_leave ? `Status: ${group.leave_status}` : `Started: ${formatTime(group.start_time)}\nMeter: ${group.meter_reading}`, s: bodyStyle }
                 ]);
                 currentRow++;
@@ -235,6 +235,7 @@ const Reports = () => {
             });
 
             if (response.data?.report?.length > 0) {
+                console.log("Report Data: ", response.data);
                 setReportData(response.data);
             } else {
                 setReportData(null);
@@ -434,9 +435,9 @@ const Reports = () => {
                                 <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>Time</TableCell>
                                 <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>Type</TableCell>
                                 <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>Customer Name</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd', width: '60px', whiteSpace: 'normal', lineHeight: '1.2', textAlign: 'center' }}>Customer Phone</TableCell>
                                 <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>Tehsil</TableCell>
                                 <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>Visit Purpose</TableCell>
-                                <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd', width: '60px', whiteSpace: 'normal', lineHeight: '1.2', textAlign: 'center' }}>Bags Potential</TableCell>
                                 <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd', textAlign: 'center' }}>Visit Location</TableCell>
                                 <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd', textAlign: 'center' }}>Day Start Info</TableCell>
                             </TableRow>
@@ -462,9 +463,9 @@ const Reports = () => {
                                         <TableCell sx={{ border: '1px solid #ddd' }}>{visit?.visit_time || "-"}</TableCell>
                                         <TableCell sx={{ border: '1px solid #ddd' }}>{visit?.type || "-"}</TableCell>
                                         <TableCell sx={{ border: '1px solid #ddd' }}>{visit?.customer_name || (isOnLeave && vIndex === 0 ? "--" : "-")}</TableCell>
+                                        <TableCell sx={{ border: '1px solid #ddd', textAlign: 'center' }}>{visit?.customer_phone || "-"}</TableCell>
                                         <TableCell sx={{ border: '1px solid #ddd' }}>{visit?.tehsil || "-"}</TableCell>
                                         <TableCell sx={{ border: '1px solid #ddd' }}>{visit ? getVisitPurposeLabel(visit.visit_purpose) : "-"}</TableCell>
-                                        <TableCell sx={{ border: '1px solid #ddd', textAlign: 'center' }}>{visit?.bags_potential || "-"}</TableCell>
 
                                         {/* Visit Location */}
                                         <TableCell sx={{ border: '1px solid #ddd', textAlign: 'center' }}>

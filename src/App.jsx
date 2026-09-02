@@ -16,7 +16,7 @@ import Reports from './pages/Reports';
 import SummaryReports from './pages/SummaryReports';
 import Items from './pages/Items';
 import SaleOrder from './pages/SaleOrder';
-import MeterReadingReport from './pages/MeterReadingReports';
+// import MeterReadingReport from './pages/MeterReadingReports';
 import VisitVerificationReport from './pages/VisitVerificationReport';
 import VisitCountReport from './pages/VisitCountReport';
 import SalesPersonWiseDvrReport from './pages/SalePersonWiseDvrReport';
@@ -60,7 +60,7 @@ function App() {
             <Route path="summary-reports" element={<SummaryReports />} />
             <Route path="items" element={<Items />} />
             <Route path="sale-orders" element={<SaleOrder />} />
-            <Route path="meter-reading-reports" element={<MeterReadingReport />} />
+            {/* <Route path="meter-reading-reports" element={<MeterReadingReport />} /> */}
             <Route path="visit-verification-reports" element={<VisitVerificationReport />} />
             <Route path="visit-count-report" element={<VisitCountReport />} />
             <Route path="sales-person-wise-dvr-report" element={<SalesPersonWiseDvrReport />} />
